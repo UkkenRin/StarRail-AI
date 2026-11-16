@@ -118,6 +118,15 @@ internal object AccountProfileParser {
             result.append(line)
             included++
         }
+        if (failed.length() > 0) {
+            val details = (0 until minOf(failed.length(), 8)).mapNotNull { i ->
+                val failure = failed.optJSONObject(i) ?: return@mapNotNull null
+                (failure.optString("name").take(60) + " " +
+                    failure.optString("error", failure.optString("reason")).take(90)).trim()
+            }.filter { it.isNotBlank() }
+            if (details.isNotEmpty()) result.append("读取失败详情：")
+                .append(details.joinToString("；")).append("\n")
+        }
         if (!complete || failed.length() > 0 || warnings > 0) {
             result.append("注意：导出不完整或存在 OCR 警告（")
                 .append(warnings).append(" 条），不可据此断言角色或装备不存在。\n")
@@ -128,7 +137,7 @@ internal object AccountProfileParser {
 
     private fun statText(stat: JSONObject): String = stat.optString("stat").take(28) +
         "=" + stat.opt("value")?.toString().orEmpty().take(20) +
-        if (stat.optBoolean("percent")) "%" else ""
+        (if (stat.optBoolean("percent")) "%" else "")
 
     fun readBounded(stream: InputStream): String {
         val output = ByteArrayOutputStream()
