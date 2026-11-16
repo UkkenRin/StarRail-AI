@@ -7,7 +7,7 @@
 - ☑ 创建跨平台仓库、GPL 许可、上游移植文档与 Android CI。
 - ☑ 安卓只读多 Provider 顾问页面源码（输入账号摘要和问题，调用兼容 Chat Completions）。
 - ✅ **Android Actions 构建通过，Debug APK 产物已上传**：2026-11-16 构建 [#43890667492](https://github.com/yu-x-an/StarRail-AI/actions/runs/43890667492)，产物名 `starrail-ai-android-debug`（仅 CI 验证，**尚未真机安装/测试**；当前产物保留至 2026-11-23）。
-- ☐ 独立 applicationId/应用名/签名策略，避免覆盖官方助手及安装冲突。
+- ☑ 已提交独立 applicationId `top.starrailai`、应用名补丁及测试；**新 CI、安装/签名兼容和 Shizuku 操作尚待验收**。
 - ☐ Android 真实设备安装、运行、模型 API 请求验证；记录日志（不含密钥）。
 - ☐ 配置 Windows 代码与测试 CI，形成跨平台共享核心包。
 - ☐ 保留上游版本 pin，增加升级兼容测试；定期核对安全与许可。
@@ -40,15 +40,15 @@
 
 - ☑ 只读 API Key provider 页面提交：OpenAI/DeepSeek/通义/自定义（未实测）。
 - ☐ 校验模型请求的 HTTPS、日志隐私、错误与限流；增加 Keystore 安全存储和撤销功能。
-- ☐ 查证并实现官方允许的 ChatGPT OAuth 流程（PKCE/state/token），验证可用平台、权限/额度。
+- ✅ ChatGPT OAuth 实验源码已提交（PKCE/state/动态注册/回调/RS256 验签/Keystore/Responses SSE），提交 [995df6e](https://github.com/yu-x-an/StarRail-AI/commit/995df6e57d72694cef3b8833d8c16a0a808987b8) 的 [CI](https://github.com/yu-x-an/StarRail-AI/actions/runs/43893504654) **编译成功**；**尚未真机授权、模型选择、请求与续期验证**。
 - ☐ 按需截图：用户授权与可见提示、局部裁剪、频率限制、调用统计与费用提醒。
 - ☐ AI 配对机制知识须有来源及版本识别，不把过期关卡策略当成当期规则。
 
 ## 最近开发接续顺序
 
-1. 当前 CI 已成功；优先处理**独立 applicationId/签名兼容**并进行真机安装和调用测试。
-2. 解决独立安装包身份/签名，避免与官方 APK 冲突。
-3. 测试多供应商接口（不在仓库保存密钥）。
+1. 核对独立包名 + OAuth 最新构建是否通过，验证 APK 产物存在。
+2. 在 iQOO Pad5 Pro 真机分别测试 OAuth 登录回调、模型发现、推理、断开及 401/额度失败；不把 Token 传到公开仓库。
+3. 测试其他 API 供应商接口（不在仓库保存密钥）。
 4. 提取共享 AccountProfile + Python 导出数据契约，在 Windows/Linux 单元测试。
 5. 调研/实现安全的 Android 实体屏截图与模式切换。
 6. 后续再推进 PC 高难移植和 AI 控制。
