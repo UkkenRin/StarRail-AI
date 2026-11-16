@@ -1,0 +1,53 @@
+name: Build Android experimental APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-debug.yml'
+      - 'android_overlay/**'
+      - 'scripts/apply_android_overlay.py'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test local overlay
+        run: python3 -m unittest discover -s tests -v
+      - name: Fetch fixed upstream release
+        run: git clone --depth 1 --branch v2026.11.17 https://github.com/moesnow/March7thAssistant.git upstream
+      - name: Apply AI advisor patch
+        run: python3 scripts/apply_android_overlay.py upstream
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: astral-sh/setup-uv@v6
+      - name: Prepare Android SDK components
+        working-directory: upstream/Android
+        run: |
+          platform=$(sed -n 's/^m7a\.androidPlatform=//p' gradle.properties)
+          build_tools=$(sed -n 's/^m7a\.buildTools=//p' gradle.properties)
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "platforms;$platform" "build-tools;$build_tools"
+      - name: Build debug APK with upstream toolchain
+        working-directory: upstream/Android
+        run: |
+          uv python install 3.14.8
+          python=$(uv python find --no-project 3.14.8)
+          "$python" app/prepare_wheels.py app/build/wheelhouse
+          ./gradlew --no-daemon :device-service:test :device-service:dexJar :app:testDebugUnitTest :app:assembleDebug "-Pm7a.hostPython=$python" -Pm7a.versionCode=1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: starrail-ai-android-debug
+          path: upstream/Android/app/build/universal/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
