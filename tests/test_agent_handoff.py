@@ -56,7 +56,7 @@ class HandoffTests(unittest.TestCase):
         for overrides in (
             {"user_authorized": False},
             {"game_focused": False},
-            {"last_frame_ms": 1},
+            {"now_ms": 5000},
             {"last_frame_ms": 1001},
         ):
             args = dict(user_authorized=True, game_focused=True,
@@ -148,7 +148,7 @@ class HandoffTests(unittest.TestCase):
     def test_direct_agent_requires_authorization_focus_and_fresh_frame(self):
         for overrides in (
             {"user_authorized": False}, {"game_focused": False},
-            {"last_frame_ms": 1}, {"last_frame_ms": 1002},
+            {"now_ms": 5000}, {"last_frame_ms": 1002},
         ):
             args = dict(user_authorized=True, game_focused=True,
                         last_frame_ms=1000, now_ms=1000)
