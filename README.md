@@ -4,6 +4,10 @@
 
 > **开发初期 / 非官方客户端。** 本项目以 [March7thAssistant](https://github.com/moesnow/March7thAssistant) 的开源实现为参考和运行底座，目标是把 PC 自动化、Android 后台控制、账号理解及多模型 AI 决策逐步结合。**当前还不是能自主通关的 AI 玩家。**
 
+## 已接入源码：跨平台场景知识库
+
+基于固定版本上游 M7A 的 PC **61** 个场景、触屏 **20** 个场景，生成 **68** 个去重场景 ID 和平台独立导航关系。知识库在 [data/game_scenes.json](data/game_scenes.json)，Python 共用接口在 [starrail_core/scene_knowledge.py](starrail_core/scene_knowledge.py)。安卓「AI 顾问」可**离线搜索并手动选场景**；之后连接模型时，仅按需发送选中场景的可读摘要。**不是实时识别游戏画面，不会自动操作，不会上传源代码脚本。** 详情：[场景知识库](docs/SCENE_KNOWLEDGE.md)。
+
 ## 新方向：Live Vision（直接视觉理解，不强制 OCR）
 
 最新决策：**让 Android/Windows 在本地持续采集游戏画面流；只在必要的关键事件，把画面直接交给支持视觉的 AI 分析**，无需强制 OCR。持续本地采集不等于持续上传云视频；模型费用仍然受关键帧次数、分辨率和 Provider 规则影响。现有稳定的 OCR 任务保留，作为精确读取属性等可选方案。
