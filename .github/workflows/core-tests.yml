@@ -1,0 +1,36 @@
+name: Shared account core tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'starrail_core/**'
+      - 'tests/test_account_contract.py'
+      - '.github/workflows/core-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'starrail_core/**'
+      - 'tests/test_account_contract.py'
+      - '.github/workflows/core-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate imported PC character exports
+        run: python -m unittest discover -s tests -p test_account_contract.py -v

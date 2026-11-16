@@ -22,6 +22,10 @@
 
 **这里没有自动扫描账号、没有前台实体屏控制、也没有 AI 自主战斗。** 新增独立包名 `top.starrailai` 的构建与安装仍须单独验证。详见 [OAuth 状态及测试说明](docs/OAUTH.md)。
 
+## 正在开发：真实账号档案导入
+
+[账号档案功能与使用边界](docs/ACCOUNT_PROFILE.md)：在 Android「AI 顾问」页面导入 PC 版 `characters.json` 或在平板上直接保存账号备注。支持本地 Keystore 加密保存、只发送摘要给所选 AI、读取失败标记、用户主动删除。**这是导入而不是 Android 游戏自动扫描**；该功能正在 [PR 中接受构建验证](https://github.com/yu-x-an/StarRail-AI/pulls)，请以最新成功 CI 为准。
+
 ## 构建
 
 在 GitHub 仓库的 **Actions → Build Android experimental APK → Run workflow** 启动，成功后从本次运行页面下载 `starrail-ai-android-debug`。无需 PC。首次构建可能较久，需保持 Actions 可用并由 GitHub 提供网络资源。

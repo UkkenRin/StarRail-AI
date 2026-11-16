@@ -2,6 +2,8 @@ package top.m7a.ui
 
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -90,6 +94,9 @@ internal fun AiAdvisorScreen() {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val chatgpt = remember(context) { ChatGptOAuth(context.applicationContext) }
+    val profileStore = remember(context) { AccountProfileStore(context.applicationContext) }
+    var importedProfile by remember { mutableStateOf(profileStore.load()) }
+    var clearConfirm by remember { mutableStateOf(false) }
     var oauthModel by remember { mutableStateOf("") }
     var oauthModels by remember { mutableStateOf(emptyList<ChatGptOAuth.Model>()) }
     var oauthMenu by remember { mutableStateOf(false) }
@@ -99,18 +106,71 @@ internal fun AiAdvisorScreen() {
     var model by remember { mutableStateOf(provider.defaultModel) }
     var apiKey by remember { mutableStateOf("") }
     var customBase by remember { mutableStateOf("") }
-    var account by remember { mutableStateOf("") }
+    var account by remember { mutableStateOf(profileStore.loadNotes()) }
     var observation by remember { mutableStateOf("") }
     var question by remember { mutableStateOf("请根据我的账号给出不浪费资源的配队和培养建议") }
     var answer by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("可使用支持 Chat Completions 的 AI API；暂不直接控制游戏") }
     var busy by remember { mutableStateOf(false) }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            busy = true
+            status = "正在读取并验证账号文件……"
+            scope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val raw = context.contentResolver.openInputStream(uri)?.use {
+                            AccountProfileParser.readBounded(it)
+                        } ?: error("无法读取该文件")
+                        profileStore.import(raw)
+                    }
+                }
+                result.onSuccess {
+                    importedProfile = it
+                    status = "已导入 " + it.characterCount + " 位角色，本地加密保存成功"
+                }.onFailure { status = "导入失败：" + (it.message ?: "文件不符合格式") }
+                busy = false
+            }
+        }
+    }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text("AI 账号顾问 · 实验版", style = MaterialTheme.typography.titleLarge)
-        Text("只分析你主动输入的资料，不会控制星铁。ChatGPT 登录使用本机 OAuth；其他服务使用 API Key。")
+        Text("只读分析；不会控制游戏。你的账号档案只加密保存在本机，只有点击“让 AI 分析”才会将本次分析所需文字发给所选 AI。")
+        Text("账号档案（实验版）", style = MaterialTheme.typography.titleMedium)
+        Text("可以导入 PC 三月七小助手导出的 characters.json；目前不支持直接扫描安卓游戏，也不能获取未装备的全部遗器。")
+        Button(enabled = !busy, onClick = {
+            picker.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*"))
+        }) { Text("导入 characters.json 文件") }
+        val p = importedProfile
+        if (p != null) {
+            Text("已保存：" + p.characterCount + " 位角色 · 导出时间 " + p.exportedAt)
+            Text("完整：" + (if (p.complete) "是" else "否") +
+                " · 失败：" + p.failedCount + " · 警告：" + p.warningCount)
+            Button(enabled = !busy, onClick = { clearConfirm = true }) {
+                Text("清除已导入档案")
+            }
+        }
+        if (clearConfirm) {
+            AlertDialog(
+                onDismissRequest = { clearConfirm = false },
+                title = { Text("删除账号档案？") },
+                text = { Text("只删除本机导入的角色资料，不删除单独保存的备注。") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        profileStore.clearImported()
+                        importedProfile = null
+                        clearConfirm = false
+                        status = "本地导入档案已删除"
+                    }) { Text("删除") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { clearConfirm = false }) { Text("取消") }
+                }
+            )
+        }
         Button(onClick = { expanded = true }) { Text("AI 服务：" + provider.title) }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             Provider.entries.forEach { item ->
@@ -196,9 +256,20 @@ internal fun AiAdvisorScreen() {
                 label = { Text("API Key（此版本不保存）") }, visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(), singleLine = true)
         }
-        OutlinedTextField(value = account, onValueChange = { if (it.length <= 20000) account = it },
-            label = { Text("你的角色 / 光锥 / 遗器 / 培养偏好") },
+        OutlinedTextField(value = account, onValueChange = { if (it.length <= 12000) account = it },
+            label = { Text("手动补充账号信息 / 培养偏好（可不填）") },
             minLines = 3, modifier = Modifier.fillMaxWidth())
+        Button(enabled = !busy, onClick = {
+            busy = true
+            scope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    runCatching { profileStore.saveNotes(account) }
+                }
+                result.onSuccess { status = "账号备注已在本机加密保存" }
+                    .onFailure { status = "保存失败：" + (it.message ?: "未知错误") }
+                busy = false
+            }
+        }) { Text("保存账号备注（本地）") }
         OutlinedTextField(value = observation, onValueChange = { observation = it },
             label = { Text("关卡、敌人或游戏当前情况（可不填）") },
             minLines = 2, modifier = Modifier.fillMaxWidth())
@@ -213,8 +284,13 @@ internal fun AiAdvisorScreen() {
             scope.launch {
                 val result = withContext(Dispatchers.IO) {
                     runCatching {
-                        if (provider == Provider.CHATGPT) chatgpt.respond(oauthModel, account, observation, question)
-                        else analyze(provider, customBase, apiKey, model, account, observation, question)
+                        val knownAccount = listOfNotNull(
+                            importedProfile?.promptSummary,
+                            account.takeIf { it.isNotBlank() }?.let { "用户补充备注：\n" + it }
+                        ).joinToString("\n\n")
+                        if (provider == Provider.CHATGPT)
+                            chatgpt.respond(oauthModel, knownAccount, observation, question)
+                        else analyze(provider, customBase, apiKey, model, knownAccount, observation, question)
                     }
                 }
                 result.onSuccess { answer = it; status = "分析完成（仅发送文字，无截图）" }

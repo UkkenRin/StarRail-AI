@@ -2,6 +2,13 @@ name: Build Android experimental APK
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-debug.yml'
+      - 'android_overlay/**'
+      - 'scripts/apply_android_overlay.py'
+      - 'tests/**'
   push:
     branches: [main]
     paths:

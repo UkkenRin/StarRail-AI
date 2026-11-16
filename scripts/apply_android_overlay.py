@@ -37,6 +37,9 @@ def apply(upstream: Path):
         "                            Tab.LOGS -> LogsScreen(state, logs, actions)\n                            Tab.AI -> AiAdvisorScreen()")
     gradle_code = gradle.read_text(encoding="utf-8")
     gradle_code = replace_once(gradle_code, "applicationId = 'top.m7a'", "applicationId = 'top.starrailai'")
+    gradle_code = replace_once(gradle_code,
+        "    testImplementation 'junit:junit:4.13.2'",
+        "    testImplementation 'junit:junit:4.13.2'\n    testImplementation 'org.json:json:20250517'")
     s = strings.read_text(encoding="utf-8")
     s = replace_once(s, '<string name="app_name">三月七小助手</string>',
                         '<string name="app_name">StarRail AI（实验版）</string>')
@@ -53,6 +56,16 @@ def apply(upstream: Path):
     if not oauth_source.is_file():
         raise FileNotFoundError(oauth_source)
     shutil.copyfile(oauth_source, advisor.with_name("ChatGptOAuth.kt"))
+    profile_source = OVERLAY / "app/src/main/kotlin/top/m7a/ui/AccountProfile.kt"
+    if not profile_source.is_file():
+        raise FileNotFoundError(profile_source)
+    shutil.copyfile(profile_source, advisor.with_name("AccountProfile.kt"))
+    profile_test = OVERLAY / "app/src/test/kotlin/top/m7a/ui/AccountProfileTest.kt"
+    if not profile_test.is_file():
+        raise FileNotFoundError(profile_test)
+    test_output = upstream / "Android/app/src/test/kotlin/top/m7a/ui/AccountProfileTest.kt"
+    test_output.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(profile_test, test_output)
 
 
 if __name__ == "__main__":
