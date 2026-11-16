@@ -21,7 +21,7 @@ class TestOverlay(unittest.TestCase):
             gradle = root / "Android/app/build.gradle"
             app.parent.mkdir(parents=True)
             strings.parent.mkdir(parents=True)
-            gradle.parent.mkdir(parents=True)
+            gradle.parent.mkdir(parents=True, exist_ok=True)
             app.write_text("    LOGS(R.string.tab_logs, M7Icons.Logs),\n" +
                            "                            Tab.LOGS -> LogsScreen(state, logs, actions)\n")
             strings.write_text('<resources>\n    <string name="app_name">三月七小助手</string>\n</resources>')
@@ -44,7 +44,7 @@ class TestOverlay(unittest.TestCase):
             gradle = root / "Android/app/build.gradle"
             app.parent.mkdir(parents=True)
             strings.parent.mkdir(parents=True)
-            gradle.parent.mkdir(parents=True)
+            gradle.parent.mkdir(parents=True, exist_ok=True)
             app.write_text("unexpected upstream")
             strings.write_text('<resources><string name="app_name">三月七小助手</string></resources>')
             gradle.write_text("applicationId = 'top.m7a'")
