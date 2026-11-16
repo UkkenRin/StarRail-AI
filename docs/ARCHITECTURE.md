@@ -6,14 +6,14 @@ We maintain an upstream + overlay build until core control interfaces stabilize.
 
 - GameObserver: local screenshots and OCR plus structured account state. Screenshot must be opt-in for cloud use. On-device OCR is preferred when sufficient.
 - AccountProfile: character, light cone, equipped relic, and provenance/last-updated. Do not infer unobserved inventory.
-- AiProvider: ChatGPT OAuth (future), API-key provider (initial Android MVP), multimodal provider (future). All tokens must stay off Git.
+- AiProvider: ChatGPT OAuth (Android prototype submitted, not device-verified), API-key provider (initial Android MVP), multimodal provider (future). All tokens must stay off Git.
 - Planner: receives game state, user preferences, and action capability list. Outputs a typed plan and human-readable rationale.
 - ActionGuard: validates current game package/display/scale, confidence, cooldown, and action allowlist. No model-authored raw shell commands; irreversible actions require explicit user consent.
 - GameExecutor: Windows native input, Android Shizuku virtual display, future Android physical display. Backend boundaries are explicit and tests are platform-specific.
 
-## Android MVP v0.4
+## Android MVP v0.5 (code / CI only)
 
-Overlay contributes only a text-based read-only advisor using HTTPS OpenAI-compatible Chat Completions. Account/observation are typed into the UI. API key remains in in-memory UI state. No screenshot upload, autonomous action, account scan, PC challenge mode or OAuth yet. This deliberately avoids unsafe assumptions about the foreground screen.
+Overlay contributes a text-based read-only advisor using HTTPS OpenAI-compatible Chat Completions plus an experimental native ChatGPT OAuth option. ChatGPT plan requests use official Responses API (`store:false`, `stream:true`) and a dynamically registered public OAuth client. Credentials are encrypted with Android Keystore. OAuth was compiled in an earlier CI build but has **not** been authenticated or tested on device. Account/observation are typed into the UI; there is no screenshot upload, autonomous action, account scan, PC challenge mode or foreground game control. This deliberately avoids unsafe assumptions about the foreground screen.
 
 ## Platform matrix
 
