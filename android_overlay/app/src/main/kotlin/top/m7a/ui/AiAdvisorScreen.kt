@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -95,6 +96,11 @@ internal fun AiAdvisorScreen() {
     val context = LocalContext.current
     val chatgpt = remember(context) { ChatGptOAuth(context.applicationContext) }
     val profileStore = remember(context) { AccountProfileStore(context.applicationContext) }
+    val sceneLoad = remember(context) { runCatching { SceneCatalog.load(context.applicationContext) } }
+    val sceneCatalog = sceneLoad.getOrNull()
+    var sceneQuery by rememberSaveable { mutableStateOf("") }
+    var sceneMenu by remember { mutableStateOf(false) }
+    var selectedSceneId by rememberSaveable { mutableStateOf("") }
     var importedProfile by remember { mutableStateOf(profileStore.load()) }
     var clearConfirm by remember { mutableStateOf(false) }
     var oauthModel by remember { mutableStateOf("") }
@@ -270,6 +276,60 @@ internal fun AiAdvisorScreen() {
                 busy = false
             }
         }) { Text("保存账号备注（本地）") }
+        Text("游戏场景知识库（离线可用）", style = MaterialTheme.typography.titleMedium)
+        if (sceneCatalog == null) {
+            Text("未能读取场景知识库，请检查 APK 构建；不会发送伪造的游戏数据。")
+        } else {
+            Text("已收录 " + sceneCatalog.pcCount + " 个 PC 场景、" +
+                sceneCatalog.touchCount + " 个安卓触屏场景（共 " +
+                sceneCatalog.scenes.size + " 个不同 ID）。")
+            Text("手动选场景是告诉 AI 你目前可能在哪里，不是自动检测；不需要先连接 GPT。")
+            OutlinedTextField(
+                value = sceneQuery,
+                onValueChange = { sceneQuery = it; sceneMenu = true },
+                label = { Text("搜索场景（例：末日、队伍、邮箱）") },
+                modifier = Modifier.fillMaxWidth(), singleLine = true,
+            )
+            Button(onClick = { sceneMenu = true }) {
+                Text("当前场景：" + (sceneCatalog.get(selectedSceneId)?.name ?: "不指定"))
+            }
+            DropdownMenu(expanded = sceneMenu, onDismissRequest = { sceneMenu = false }) {
+                DropdownMenuItem(text = { Text("不指定场景") }, onClick = {
+                    selectedSceneId = ""
+                    sceneQuery = ""
+                    sceneMenu = false
+                })
+                sceneCatalog.search(sceneQuery, limit = 12).forEach { item ->
+                    val available = when {
+                        item.pc != null && item.touch != null -> "PC/安卓"
+                        item.pc != null -> "仅 PC"
+                        else -> "仅安卓"
+                    }
+                    DropdownMenuItem(
+                        text = { Text(item.name + " · " + available) },
+                        onClick = {
+                            selectedSceneId = item.id
+                            sceneQuery = ""
+                            sceneMenu = false
+                        }
+                    )
+                }
+            }
+            sceneCatalog.get(selectedSceneId)?.let { scene ->
+                Text("所选：" + scene.name + "（用户手选，未经截图确认）")
+                val pcOptions = scene.pc?.destinations?.mapNotNull {
+                    sceneCatalog.get(it)?.pc?.name
+                }.orEmpty().take(12)
+                val touchOptions = scene.touch?.destinations?.mapNotNull {
+                    sceneCatalog.get(it)?.touch?.name
+                }.orEmpty().take(12)
+                Text("PC 已知入口：" +
+                    (if (scene.pc == null) "未收录" else pcOptions.joinToString("、").ifBlank { "无" }))
+                Text("安卓已知入口：" +
+                    (if (scene.touch == null) "未收录" else touchOptions.joinToString("、").ifBlank { "无" }))
+            }
+            Text("这里只显示静态导航资料；不会自动读取或操作游戏，模型也不能执行原版 PC 点击脚本。")
+        }
         OutlinedTextField(value = observation, onValueChange = { observation = it },
             label = { Text("关卡、敌人或游戏当前情况（可不填）") },
             minLines = 2, modifier = Modifier.fillMaxWidth())
@@ -288,9 +348,15 @@ internal fun AiAdvisorScreen() {
                             importedProfile?.promptSummary,
                             account.takeIf { it.isNotBlank() }?.let { "用户补充备注：\n" + it }
                         ).joinToString("\n\n")
+                        val situation = listOfNotNull(
+                            sceneCatalog?.contextFor(selectedSceneId)?.takeIf { it.isNotBlank() },
+                            observation.takeIf { it.isNotBlank() }?.let {
+                                "用户自行描述的当前情况（未通过游戏画面确认）：\n" + it
+                            }
+                        ).joinToString("\n\n")
                         if (provider == Provider.CHATGPT)
-                            chatgpt.respond(oauthModel, knownAccount, observation, question)
-                        else analyze(provider, customBase, apiKey, model, knownAccount, observation, question)
+                            chatgpt.respond(oauthModel, knownAccount, situation, question)
+                        else analyze(provider, customBase, apiKey, model, knownAccount, situation, question)
                     }
                 }
                 result.onSuccess { answer = it; status = "分析完成（仅发送文字，无截图）" }
