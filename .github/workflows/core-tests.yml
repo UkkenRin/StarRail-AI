@@ -7,6 +7,7 @@ on:
     paths:
       - 'starrail_core/**'
       - 'tests/test_account_contract.py'
+      - 'tests/test_live_vision.py'
       - '.github/workflows/core-tests.yml'
   pull_request:
     branches: [main]
@@ -33,4 +34,4 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate imported PC character exports
-        run: python -m unittest discover -s tests -p test_account_contract.py -v
+        run: python -m unittest discover -s tests -p test_*.py -v

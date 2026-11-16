@@ -41,7 +41,8 @@
 - ☑ 只读 API Key provider 页面提交：OpenAI/DeepSeek/通义/自定义（未实测）。
 - ☐ 校验模型请求的 HTTPS、日志隐私、错误与限流；增加 Keystore 安全存储和撤销功能。
 - ✅ ChatGPT OAuth 实验源码已提交（PKCE/state/动态注册/回调/RS256 验签/Keystore/Responses SSE），提交 [995df6e](https://github.com/yu-x-an/StarRail-AI/commit/995df6e57d72694cef3b8833d8c16a0a808987b8) 的 [CI](https://github.com/yu-x-an/StarRail-AI/actions/runs/43893504654) **编译成功**；**尚未真机授权、模型选择、请求与续期验证**。
-- ☐ **低 Token 架构**：默认本地 OCR/状态机、不持续上传画面；添加事件触发、策略缓存、按需裁剪截图、调用冷却与去重、每任务/每日预算限额、用量统计和停止机制。详见 [TOKEN_BUDGET.md](TOKEN_BUDGET.md)。
+- ◐ **Live Vision 视觉智能体**：以本地持续画面流为基础，视觉模型直接分析关键画面，OCR 变为可选组件；独立 Android/Windows Capture 驱动、屏幕焦点保护、结构化行动接口待实现。已经新增纯 Python 帧事件预算门控和测试，**不代表 APK 已具备录屏或自动操控能力**。详见 [LIVE_VISION.md](LIVE_VISION.md)。
+- ☐ **低 Token 架构**：持续本地观察、不持续上传云端视频；实现事件触发、策略缓存、关键帧裁剪、调用冷却与去重、每任务/每日预算限额、用量统计和停止机制。详见 [TOKEN_BUDGET.md](TOKEN_BUDGET.md)。
 - ☐ 按需截图：用户授权与可见提示、局部裁剪、频率限制、调用统计与费用提醒。
 - ☐ AI 配对机制知识须有来源及版本识别，不把过期关卡策略当成当期规则。
 
@@ -51,7 +52,7 @@
 2. 在 iQOO Pad5 Pro 真机分别测试 OAuth 登录回调、模型发现、推理、断开及 401/额度失败；不把 Token 传到公开仓库。
 3. 测试其他 API 供应商接口（不在仓库保存密钥）。
 4. 完成 Kotlin/JUnit 和跨平台 Python 账号数据契约测试；然后移植安卓 touch_720 自动扫描。
-5. 调研/实现安全的 Android 实体屏截图与模式切换。
+5. 优先实现跨平台 Live Vision 的 `FrameSource`、Android 本地屏幕流/MediaProjection 与 Windows Capture；先只读视觉理解，再研究受限操作。OCR 仅用于选配的数值读取。
 6. 后续再推进 PC 高难移植和 AI 控制。
 
 **注意**：这些是开发计划而非完成承诺；需要每次会话明确触发后才能继续实际开发，GitHub Actions 可自动构建已提交的改动。
