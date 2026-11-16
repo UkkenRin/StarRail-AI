@@ -24,8 +24,9 @@ def replace_once(text: str, before: str, after: str) -> str:
 def apply(upstream: Path):
     app = upstream / "Android/app/src/main/kotlin/top/m7a/ui/App.kt"
     strings = upstream / "Android/app/src/main/res/values/strings.xml"
+    gradle = upstream / "Android/app/build.gradle"
     advisor = upstream / "Android/app/src/main/kotlin/top/m7a/ui/AiAdvisorScreen.kt"
-    if not (app.is_file() and strings.is_file()):
+    if not (app.is_file() and strings.is_file() and gradle.is_file()):
         raise FileNotFoundError("Expected M7A Android source tree")
     code = app.read_text(encoding="utf-8")
     code = replace_once(code,
@@ -34,7 +35,11 @@ def apply(upstream: Path):
     code = replace_once(code,
         "                            Tab.LOGS -> LogsScreen(state, logs, actions)",
         "                            Tab.LOGS -> LogsScreen(state, logs, actions)\n                            Tab.AI -> AiAdvisorScreen()")
+    gradle_code = gradle.read_text(encoding="utf-8")
+    gradle_code = replace_once(gradle_code, "applicationId = 'top.m7a'", "applicationId = 'top.starrailai'")
     s = strings.read_text(encoding="utf-8")
+    s = replace_once(s, '<string name="app_name">三月七小助手</string>',
+                        '<string name="app_name">StarRail AI（实验版）</string>')
     if '<string name="tab_ai">' not in s:
         s = replace_once(s, "</resources>", '    <string name="tab_ai">AI 顾问</string>\n</resources>')
     source = OVERLAY / "app/src/main/kotlin/top/m7a/ui/AiAdvisorScreen.kt"
@@ -42,6 +47,7 @@ def apply(upstream: Path):
         raise FileNotFoundError(source)
     app.write_text(code, encoding="utf-8")
     strings.write_text(s, encoding="utf-8")
+    gradle.write_text(gradle_code, encoding="utf-8")
     shutil.copyfile(source, advisor)
     oauth_source = OVERLAY / "app/src/main/kotlin/top/m7a/ui/ChatGptOAuth.kt"
     if not oauth_source.is_file():
