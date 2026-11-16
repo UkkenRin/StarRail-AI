@@ -18,13 +18,15 @@
 2. 应用本仓库 `android_overlay/` 下的实验性 AI UI 补丁。
 3. 按上游 Android 构建步骤编译 **debug APK**，以 Workflow Artifact 形式提供。
 
-首次 MVP：一个只读的「AI 顾问」页面，通过自填 API Key 调用 OpenAI 兼容的 HTTPS 接口，输入文字型账号说明/关卡信息；**不会接管游戏、不会消耗资源，也不支持读取所有遗器**。API Key 只保存在应用进程内存，不写入仓库/日志/永久存储。ChatGPT OAuth、按需单帧截图、加密存储与前台实体屏为后续独立验收项。
+当前 MVP：只读「AI 顾问」页面。支持 OpenAI/DeepSeek/通义/自定义 Chat Completions API Key；另增加 **ChatGPT OAuth 的安卓实验实现**（动态客户端注册、PKCE、loopback 回调、ID Token 验证、Keystore 凭据存储、模型列表、Responses API 流式请求）。OAuth 客户端代码曾在 [Actions #43893504654](https://github.com/yu-x-an/StarRail-AI/actions/runs/43893504654) **编译成功**；但未完成**真机登录与模型请求测试**，使用者仍可能遇到授权、系统浏览器回调或额度限制。当前 API Key 仍仅存页面内存。
+
+**这里没有自动扫描账号、没有前台实体屏控制、也没有 AI 自主战斗。** 新增独立包名 `top.starrailai` 的构建与安装仍须单独验证。详见 [OAuth 状态及测试说明](docs/OAUTH.md)。
 
 ## 构建
 
 在 GitHub 仓库的 **Actions → Build Android experimental APK → Run workflow** 启动，成功后从本次运行页面下载 `starrail-ai-android-debug`。无需 PC。首次构建可能较久，需保持 Actions 可用并由 GitHub 提供网络资源。
 
-**重要：** 实验 APK 使用自己的调试签名，通常不能直接覆盖官方三月七小助手；升级前备份数据，避免与正在运行的游戏自动化任务并发。安装与运行可能受游戏条款及账号风险约束。
+**重要：** 实验 APK 已在源码层改为独立应用 ID（`top.starrailai`），但必须先通过新 CI 才能安装测试。不要使用历史旧 APK 来验证独立安装，且避免与官方三月七小助手同时接管游戏。安装与运行可能受游戏条款及账号风险约束。
 
 ## 开发约定与需求
 
