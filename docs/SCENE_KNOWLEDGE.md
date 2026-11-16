@@ -1,6 +1,8 @@
 # 星铁场景知识库 v1：PC / Android 共享（2026-11-17）
 
-## 当前已实现（等待本分支 Actions 验收）
+## 已实现并通过 CI 验证（尚未真机测试）
+
+[实现 PR #6](https://github.com/yu-x-an/StarRail-AI/pull/6) 已合并；[Windows/Linux 单元测试](https://github.com/yu-x-an/StarRail-AI/actions/runs/43980970224) 与 [Android 编译、JUnit、APK 产物](https://github.com/yu-x-an/StarRail-AI/actions/runs/43980970062) 均成功。已直接检查 APK 内含 `assets/starrail_ai_scenes.json`，其中 68 个场景及 PC/安卓数量正确。
 
 - 从固定上游 March7thAssistant `v2026.11.17` 提取两套界面导航：
   - **PC (`pc_1080`)：61 个场景、116 条直接导航关系**，来源 `assets/config/screens.json`。
