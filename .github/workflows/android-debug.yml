@@ -8,6 +8,8 @@ on:
       - '.github/workflows/android-debug.yml'
       - 'android_overlay/**'
       - 'scripts/apply_android_overlay.py'
+      - 'scripts/build_scene_knowledge.py'
+      - 'data/game_scenes.json'
       - 'tests/**'
   push:
     branches: [main]
@@ -15,6 +17,8 @@ on:
       - '.github/workflows/android-debug.yml'
       - 'android_overlay/**'
       - 'scripts/apply_android_overlay.py'
+      - 'scripts/build_scene_knowledge.py'
+      - 'data/game_scenes.json'
       - 'tests/**'
 
 permissions:
@@ -32,6 +36,10 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Fetch fixed upstream release
         run: git clone --depth 1 --branch v2026.11.17 https://github.com/moesnow/March7thAssistant.git upstream
+      - name: Validate fixed-upstream scene knowledge snapshot
+        run: |
+          python3 scripts/build_scene_knowledge.py upstream --output /tmp/starrail-scenes-verified.json
+          diff -u data/game_scenes.json /tmp/starrail-scenes-verified.json
       - name: Apply AI advisor patch
         run: python3 scripts/apply_android_overlay.py upstream
       - uses: actions/setup-java@v4
