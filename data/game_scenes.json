@@ -1,0 +1,893 @@
+{
+  "schema_version": 1,
+  "game": "崩坏：星穹铁道",
+  "source": {
+    "repo": "moesnow/March7thAssistant",
+    "ref": "v2026.11.17",
+    "pc": "assets/config/screens.json",
+    "touch": "assets/touch_720/screens.json"
+  },
+  "scenes": [
+    {
+      "id": "main",
+      "name": "主界面",
+      "pc": {
+        "name": "主界面",
+        "destinations": [
+          "menu",
+          "map",
+          "stellar_warp",
+          "incoming_message"
+        ]
+      },
+      "touch": {
+        "name": "主界面",
+        "destinations": [
+          "menu",
+          "guide2"
+        ]
+      }
+    },
+    {
+      "id": "menu",
+      "name": "手机菜单",
+      "pc": {
+        "name": "手机菜单",
+        "destinations": [
+          "main",
+          "guide2",
+          "guide3",
+          "guide4",
+          "guide5",
+          "mail",
+          "visa",
+          "redemption",
+          "camera",
+          "dispatch",
+          "pass1",
+          "consumables",
+          "bag_consumables",
+          "bag_relicset",
+          "bag_lc",
+          "configure_team",
+          "activity",
+          "achievement",
+          "character"
+        ]
+      },
+      "touch": {
+        "name": "手机菜单",
+        "destinations": [
+          "main",
+          "dispatch",
+          "mail",
+          "visa",
+          "incoming_message",
+          "pass1",
+          "material"
+        ]
+      }
+    },
+    {
+      "id": "map",
+      "name": "地图",
+      "pc": {
+        "name": "地图",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "map3d",
+      "name": "3D地图",
+      "pc": {
+        "name": "3D地图",
+        "destinations": [
+          "map"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "monthly_card",
+      "name": "月卡",
+      "pc": {
+        "name": "月卡",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "enter_cloud_game",
+      "name": "进入云游戏",
+      "pc": {
+        "name": "进入云游戏",
+        "destinations": [
+          "click_enter"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "start_game",
+      "name": "启动游戏",
+      "pc": {
+        "name": "启动游戏",
+        "destinations": [
+          "click_enter"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "click_enter",
+      "name": "点击进入",
+      "pc": {
+        "name": "点击进入",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "leave_temporarily",
+      "name": "退出「模拟宇宙」",
+      "pc": {
+        "name": "退出「模拟宇宙」",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "universe_report",
+      "name": "模拟宇宙-分析报告",
+      "pc": {
+        "name": "模拟宇宙-分析报告",
+        "destinations": [
+          "universe_main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "universe_map",
+      "name": "模拟宇宙-地图",
+      "pc": {
+        "name": "模拟宇宙-地图",
+        "destinations": [
+          "leave_temporarily"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "retreat",
+      "name": "撤退",
+      "pc": {
+        "name": "撤退",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "fight_exit",
+      "name": "退出关卡",
+      "pc": {
+        "name": "退出关卡",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "guide2",
+      "name": "星际和平指南-每日实训",
+      "pc": {
+        "name": "星际和平指南-每日实训",
+        "destinations": [
+          "menu",
+          "guide3",
+          "guide4",
+          "guide5"
+        ]
+      },
+      "touch": {
+        "name": "星际和平指南-每日实训",
+        "destinations": [
+          "main",
+          "guide3",
+          "guide5",
+          "guide4",
+          "guide6"
+        ]
+      }
+    },
+    {
+      "id": "guide3",
+      "name": "星际和平指南-生存索引",
+      "pc": {
+        "name": "星际和平指南-生存索引",
+        "destinations": [
+          "menu",
+          "guide2",
+          "guide4",
+          "guide5"
+        ]
+      },
+      "touch": {
+        "name": "星际和平指南-生存索引",
+        "destinations": [
+          "guide2"
+        ]
+      }
+    },
+    {
+      "id": "guide4",
+      "name": "星际和平指南-逐光捡金",
+      "pc": {
+        "name": "星际和平指南-逐光捡金",
+        "destinations": [
+          "menu",
+          "guide2",
+          "guide3",
+          "guide5",
+          "memory_of_chaos",
+          "purefiction",
+          "apocalyptic"
+        ]
+      },
+      "touch": {
+        "name": "星际和平指南-逐光捡金",
+        "destinations": [
+          "guide2"
+        ]
+      }
+    },
+    {
+      "id": "guide5",
+      "name": "星际和平指南-旷宇纷争",
+      "pc": {
+        "name": "星际和平指南-旷宇纷争",
+        "destinations": [
+          "menu",
+          "guide2",
+          "guide3",
+          "guide4",
+          "currency_wars_homepage",
+          "divergent_main",
+          "universe_main"
+        ]
+      },
+      "touch": {
+        "name": "星际和平指南-旷宇纷争",
+        "destinations": [
+          "guide2"
+        ]
+      }
+    },
+    {
+      "id": "mail",
+      "name": "邮箱",
+      "pc": {
+        "name": "邮箱",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": {
+        "name": "邮箱",
+        "destinations": [
+          "menu"
+        ]
+      }
+    },
+    {
+      "id": "visa",
+      "name": "漫游签证",
+      "pc": {
+        "name": "漫游签证",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": {
+        "name": "漫游签证",
+        "destinations": [
+          "menu"
+        ]
+      }
+    },
+    {
+      "id": "redemption",
+      "name": "兑换码",
+      "pc": {
+        "name": "兑换码",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "camera",
+      "name": "相机",
+      "pc": {
+        "name": "相机",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "photo_preview",
+      "name": "照片预览",
+      "pc": {
+        "name": "照片预览",
+        "destinations": [
+          "camera"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "universe_main",
+      "name": "模拟宇宙-主界面",
+      "pc": {
+        "name": "模拟宇宙-主界面",
+        "destinations": [
+          "main",
+          "universe_expansion"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "universe_expansion",
+      "name": "模拟宇宙-扩展装置",
+      "pc": {
+        "name": "模拟宇宙-扩展装置",
+        "destinations": [
+          "main",
+          "universe_main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "divergent_main",
+      "name": "差分宇宙-主界面",
+      "pc": {
+        "name": "差分宇宙-主界面",
+        "destinations": [
+          "main",
+          "divergent_mode_select"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "divergent_mode_select",
+      "name": "差分宇宙-模式选择",
+      "pc": {
+        "name": "差分宇宙-模式选择",
+        "destinations": [
+          "divergent_main",
+          "divergent_mode_select_normal",
+          "divergent_mode_select_cycle"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "divergent_mode_select_normal",
+      "name": "差分宇宙-常规演算",
+      "pc": {
+        "name": "差分宇宙-常规演算",
+        "destinations": [
+          "divergent_mode_select"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "divergent_mode_select_cycle",
+      "name": "差分宇宙-周期演算",
+      "pc": {
+        "name": "差分宇宙-周期演算",
+        "destinations": [
+          "divergent_mode_select"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "currency_wars_homepage",
+      "name": "货币战争-主界面",
+      "pc": {
+        "name": "货币战争-主界面",
+        "destinations": [
+          "main",
+          "currency_wars_mode_select"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "currency_wars_mode_select",
+      "name": "货币战争-模式选择",
+      "pc": {
+        "name": "货币战争-模式选择",
+        "destinations": [
+          "currency_wars_homepage",
+          "currency_wars_mode_select_normal",
+          "currency_wars_mode_select_overclock"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "currency_wars_mode_select_normal",
+      "name": "货币战争-标准博弈",
+      "pc": {
+        "name": "货币战争-标准博弈",
+        "destinations": [
+          "currency_wars_mode_select"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "currency_wars_mode_select_overclock",
+      "name": "货币战争-超频博弈",
+      "pc": {
+        "name": "货币战争-超频博弈",
+        "destinations": [
+          "currency_wars_mode_select"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "dispatch",
+      "name": "委托",
+      "pc": {
+        "name": "委托",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": {
+        "name": "委托",
+        "destinations": [
+          "menu"
+        ]
+      }
+    },
+    {
+      "id": "start_srpass",
+      "name": "开启无名勋礼",
+      "pc": {
+        "name": "开启无名勋礼",
+        "destinations": [
+          "pass1"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "pass1",
+      "name": "无名勋礼-奖励",
+      "pc": {
+        "name": "无名勋礼-奖励",
+        "destinations": [
+          "menu",
+          "pass2"
+        ]
+      },
+      "touch": {
+        "name": "无名勋礼-奖励",
+        "destinations": [
+          "menu",
+          "pass2"
+        ]
+      }
+    },
+    {
+      "id": "pass2",
+      "name": "无名勋礼-任务",
+      "pc": {
+        "name": "无名勋礼-任务",
+        "destinations": [
+          "menu",
+          "pass1"
+        ]
+      },
+      "touch": {
+        "name": "无名勋礼-任务",
+        "destinations": [
+          "menu",
+          "pass1"
+        ]
+      }
+    },
+    {
+      "id": "consumables",
+      "name": "合成-消耗品合成",
+      "pc": {
+        "name": "合成-消耗品合成",
+        "destinations": [
+          "menu",
+          "material"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "material",
+      "name": "合成-材料合成",
+      "pc": {
+        "name": "合成-材料合成",
+        "destinations": [
+          "menu",
+          "consumables"
+        ]
+      },
+      "touch": {
+        "name": "材料合成",
+        "destinations": [
+          "menu"
+        ]
+      }
+    },
+    {
+      "id": "bag_consumables",
+      "name": "背包-消耗品",
+      "pc": {
+        "name": "背包-消耗品",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "bag_relicset",
+      "name": "背包-遗器",
+      "pc": {
+        "name": "背包-遗器",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "bag_lc",
+      "name": "背包-光锥",
+      "pc": {
+        "name": "背包-光锥",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "memory_of_chaos",
+      "name": "忘却之庭-混沌回忆",
+      "pc": {
+        "name": "忘却之庭-混沌回忆",
+        "destinations": [
+          "main",
+          "memory"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "memory",
+      "name": "忘却之庭-回忆",
+      "pc": {
+        "name": "忘却之庭-回忆",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "prepare_fight",
+      "name": "忘却之庭-准备战斗",
+      "pc": {
+        "name": "忘却之庭-准备战斗",
+        "destinations": [
+          "memory_of_chaos"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "purefiction",
+      "name": "虚构叙事",
+      "pc": {
+        "name": "虚构叙事",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "purefiction_exit_confirm",
+      "name": "虚构叙事-终止挑战",
+      "pc": {
+        "name": "虚构叙事-终止挑战",
+        "destinations": [
+          "purefiction"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "apocalyptic",
+      "name": "末日幻影",
+      "pc": {
+        "name": "末日幻影",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "apocalyptic_exit_confirm",
+      "name": "末日幻影-终止挑战",
+      "pc": {
+        "name": "末日幻影-终止挑战",
+        "destinations": [
+          "apocalyptic"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "configure_team",
+      "name": "队伍",
+      "pc": {
+        "name": "队伍",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "activity",
+      "name": "活动",
+      "pc": {
+        "name": "活动",
+        "destinations": [
+          "menu",
+          "reward_guide"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "character_warp",
+      "name": "角色活动跃迁",
+      "pc": {
+        "name": "角色活动跃迁",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "stellar_warp",
+      "name": "常驻跃迁",
+      "pc": {
+        "name": "常驻跃迁",
+        "destinations": [
+          "main",
+          "himeko_try"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "himeko_try",
+      "name": "姬子试用",
+      "pc": {
+        "name": "姬子试用",
+        "destinations": [
+          "stellar_warp",
+          "himeko_try_banner"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "himeko_try_banner",
+      "name": "姬子试用-弹窗",
+      "pc": {
+        "name": "姬子试用-弹窗",
+        "destinations": [
+          "himeko_prepare"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "himeko_prepare",
+      "name": "姬子试用-准备战斗",
+      "pc": {
+        "name": "姬子试用-准备战斗",
+        "destinations": [
+          "himeko_try"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "achievement",
+      "name": "成就",
+      "pc": {
+        "name": "成就",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "character",
+      "name": "角色",
+      "pc": {
+        "name": "角色",
+        "destinations": [
+          "menu"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "incoming_message",
+      "name": "新消息通知",
+      "pc": {
+        "name": "新消息通知",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": {
+        "name": "短信",
+        "destinations": [
+          "menu"
+        ]
+      }
+    },
+    {
+      "id": "reward_guide",
+      "name": "奖励指南",
+      "pc": {
+        "name": "奖励指南",
+        "destinations": [
+          "activity"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "interplanar_jump",
+      "name": "二次元JUMP",
+      "pc": {
+        "name": "二次元JUMP",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "floating_grease_chronicles",
+      "name": "浮脂记事",
+      "pc": {
+        "name": "浮脂记事",
+        "destinations": [
+          "main"
+        ]
+      },
+      "touch": null
+    },
+    {
+      "id": "calyx",
+      "name": "拟造花萼",
+      "pc": null,
+      "touch": {
+        "name": "拟造花萼",
+        "destinations": [
+          "main"
+        ]
+      }
+    },
+    {
+      "id": "stagnant_shadow",
+      "name": "凝滞虚影",
+      "pc": null,
+      "touch": {
+        "name": "凝滞虚影",
+        "destinations": [
+          "main"
+        ]
+      }
+    },
+    {
+      "id": "cavern",
+      "name": "侵蚀隧洞",
+      "pc": null,
+      "touch": {
+        "name": "侵蚀隧洞",
+        "destinations": [
+          "main"
+        ]
+      }
+    },
+    {
+      "id": "echo",
+      "name": "历战余响",
+      "pc": null,
+      "touch": {
+        "name": "历战余响",
+        "destinations": [
+          "main"
+        ]
+      }
+    },
+    {
+      "id": "ornament",
+      "name": "位面饰品提取",
+      "pc": null,
+      "touch": {
+        "name": "位面饰品提取",
+        "destinations": [
+          "main"
+        ]
+      }
+    },
+    {
+      "id": "guide6",
+      "name": "星际和平指南-开拓历程",
+      "pc": null,
+      "touch": {
+        "name": "星际和平指南-开拓历程",
+        "destinations": [
+          "guide2"
+        ]
+      }
+    },
+    {
+      "id": "item_reward",
+      "name": "获得物品",
+      "pc": null,
+      "touch": {
+        "name": "获得物品",
+        "destinations": [
+          "guide2"
+        ]
+      }
+    }
+  ]
+}

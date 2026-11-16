@@ -35,6 +35,7 @@
 - 优先共享纯数据/纯策略模块，然后补 \`touch_720\` UI 状态机与模板/OCR 测试；每个玩法单独验收。
 - 上游 Agent 集成可操作 CLI、分析 \`characters.json\`，但这不等同于 GPT 实时控制每回合。
 - 角色导出要如实标注：未知/缺失/疑似错误；导出当前装备不等于拥有整个背包；不能杜撰其他遗器。
+- 新增共享静态场景知识库：`data/game_scenes.json` 必须由 `scripts/build_scene_knowledge.py` 基于固定上游版本重生并在 CI 检查一致性；只保存 PC/触屏的场景标签、ID、导航目标，**禁止将原版 `actions_list` 或脚本代码发送模型或允许 AI 执行**。用户手动选的场景仅是用户声明，不是实测的当前画面；详见 `docs/SCENE_KNOWLEDGE.md`。
 
 ## 5. AI 模型与隐私
 

@@ -66,6 +66,17 @@ def apply(upstream: Path):
     test_output = upstream / "Android/app/src/test/kotlin/top/m7a/ui/AccountProfileTest.kt"
     test_output.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(profile_test, test_output)
+    catalog_source = OVERLAY / "app/src/main/kotlin/top/m7a/ui/SceneCatalog.kt"
+    catalog_test = OVERLAY / "app/src/test/kotlin/top/m7a/ui/SceneCatalogTest.kt"
+    knowledge = ROOT / "data/game_scenes.json"
+    for required in (catalog_source, catalog_test, knowledge):
+        if not required.is_file():
+            raise FileNotFoundError(required)
+    shutil.copyfile(catalog_source, advisor.with_name("SceneCatalog.kt"))
+    shutil.copyfile(catalog_test, test_output.with_name("SceneCatalogTest.kt"))
+    asset_output = upstream / "Android/app/src/main/assets/starrail_ai_scenes.json"
+    asset_output.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(knowledge, asset_output)
 
 
 if __name__ == "__main__":
