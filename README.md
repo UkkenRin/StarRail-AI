@@ -24,7 +24,7 @@
 
 ## 正在开发：真实账号档案导入
 
-[账号档案功能与使用边界](docs/ACCOUNT_PROFILE.md)：在 Android「AI 顾问」页面导入 PC 版 `characters.json` 或在平板上直接保存账号备注。支持本地 Keystore 加密保存、只发送摘要给所选 AI、读取失败标记、用户主动删除。**这是导入而不是 Android 游戏自动扫描**；该功能正在 [PR 中接受构建验证](https://github.com/yu-x-an/StarRail-AI/pulls)，请以最新成功 CI 为准。
+[账号档案功能与使用边界](docs/ACCOUNT_PROFILE.md)：在 Android「AI 顾问」页面导入 PC 版 `characters.json` 或在平板上直接保存账号备注。支持本地 Keystore 加密保存、只发送摘要给所选 AI、读取失败标记、用户主动删除。**这是导入而不是 Android 游戏自动扫描**；这项功能已合并进主分支，Android/JUnit 与 Windows/Linux 账号契约测试均通过；**还未在 iQOO Pad5 Pro 上做真机测试**。[实现记录 PR #2](https://github.com/yu-x-an/StarRail-AI/pull/2)、[安卓构建](https://github.com/yu-x-an/StarRail-AI/actions/runs/43967027440)。
 
 ## 构建
 
