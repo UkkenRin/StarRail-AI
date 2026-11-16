@@ -1,0 +1,35 @@
+# StarRail AI
+
+跨平台《崩坏：星穹铁道》AI 助手实验项目。
+
+> **开发初期 / 非官方客户端。** 本项目以 [March7thAssistant](https://github.com/moesnow/March7thAssistant) 的开源实现为参考和运行底座，目标是把 PC 自动化、Android 后台控制、账号理解及多模型 AI 决策逐步结合。**当前还不是能自主通关的 AI 玩家。**
+
+## 项目方向
+
+- **Windows**：尽量复用上游成熟的游戏任务、账号面板导出、OCR 和自动化接口；逐步增加 AI 分析及安全决策。
+- **Android**：保留上游 Shizuku 虚拟屏模式，逐步研究 *前台实体屏*、会话复用及移动端的任务适配。
+- **AI Core**：统一账号档案、模型接口、观察→决策→验证循环。默认仅分析；任何触屏操作必须在可验证的目标窗口和白名单动作下执行。
+- **其他系统**：先支持账号分析；依赖特定平台的游戏控制能力另行适配，不保证所有平台均可自动操作。
+
+## 当前 MVP
+
+此仓库采用 **上游源码 + 本仓库补丁** 的构建方式，避免提前复制整份大型上游代码：
+1. GitHub Actions 拉取固定版本的官方源码。
+2. 应用本仓库 `android_overlay/` 下的实验性 AI UI 补丁。
+3. 按上游 Android 构建步骤编译 **debug APK**，以 Workflow Artifact 形式提供。
+
+首次 MVP：一个只读的「AI 顾问」页面，通过自填 API Key 调用 OpenAI 兼容的 HTTPS 接口，输入文字型账号说明/关卡信息；**不会接管游戏、不会消耗资源，也不支持读取所有遗器**。API Key 只保存在应用进程内存，不写入仓库/日志/永久存储。ChatGPT OAuth、按需单帧截图、加密存储与前台实体屏为后续独立验收项。
+
+## 构建
+
+在 GitHub 仓库的 **Actions → Build Android experimental APK → Run workflow** 启动，成功后从本次运行页面下载 `starrail-ai-android-debug`。无需 PC。首次构建可能较久，需保持 Actions 可用并由 GitHub 提供网络资源。
+
+**重要：** 实验 APK 使用自己的调试签名，通常不能直接覆盖官方三月七小助手；升级前备份数据，避免与正在运行的游戏自动化任务并发。安装与运行可能受游戏条款及账号风险约束。
+
+## 资料
+
+- [架构与安全边界](docs/ARCHITECTURE.md)
+- [PC 源码移植调查](docs/PORTING.md)
+- [上游 GPL-3.0 许可证](https://github.com/moesnow/March7thAssistant/blob/main/LICENSE)
+
+本仓库不收录用户密钥、Token、真实账号数据或已打包的第三方资源。使用或分发修改后的上游组件时遵守其 GPL-3.0 及其他依赖的许可证。
