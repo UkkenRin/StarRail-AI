@@ -41,6 +41,7 @@
 - ☑ 只读 API Key provider 页面提交：OpenAI/DeepSeek/通义/自定义（未实测）。
 - ☐ 校验模型请求的 HTTPS、日志隐私、错误与限流；增加 Keystore 安全存储和撤销功能。
 - ✅ ChatGPT OAuth 实验源码已提交（PKCE/state/动态注册/回调/RS256 验签/Keystore/Responses SSE），提交 [995df6e](https://github.com/yu-x-an/StarRail-AI/commit/995df6e57d72694cef3b8833d8c16a0a808987b8) 的 [CI](https://github.com/yu-x-an/StarRail-AI/actions/runs/43893504654) **编译成功**；**尚未真机授权、模型选择、请求与续期验证**。
+- ☐ **低 Token 架构**：默认本地 OCR/状态机、不持续上传画面；添加事件触发、策略缓存、按需裁剪截图、调用冷却与去重、每任务/每日预算限额、用量统计和停止机制。详见 [TOKEN_BUDGET.md](TOKEN_BUDGET.md)。
 - ☐ 按需截图：用户授权与可见提示、局部裁剪、频率限制、调用统计与费用提醒。
 - ☐ AI 配对机制知识须有来源及版本识别，不把过期关卡策略当成当期规则。
 
