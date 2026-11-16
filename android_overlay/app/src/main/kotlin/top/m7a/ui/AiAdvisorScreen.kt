@@ -256,7 +256,7 @@ internal fun AiAdvisorScreen() {
                 label = { Text("API Key（此版本不保存）") }, visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(), singleLine = true)
         }
-        OutlinedTextField(value = account, onValueChange = { if (it.length <= 20000) account = it },
+        OutlinedTextField(value = account, onValueChange = { if (it.length <= 12000) account = it },
             label = { Text("手动补充账号信息 / 培养偏好（可不填）") },
             minLines = 3, modifier = Modifier.fillMaxWidth())
         Button(enabled = !busy, onClick = {
