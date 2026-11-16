@@ -14,7 +14,7 @@
 
 ## P1：AI 账号理解（核心差异）
 
-- ◐ 已在功能分支实现 PC characters.json v1 解析、账号来源/完整性/失败标记、安卓本地 Keystore 加密存取及备注；**等待 Kotlin/Python CI 与真机验证**。自动安卓扫描尚未实现。
+- ✅ 已实现 PC characters.json v1 导入、来源/完整性/失败标记、安卓 Keystore 加密档案和本地备注；[PR #2](https://github.com/yu-x-an/StarRail-AI/pull/2) 已合并。[Android/JUnit 构建](https://github.com/yu-x-an/StarRail-AI/actions/runs/43967027440) 与 [Windows/Linux Python CI](https://github.com/yu-x-an/StarRail-AI/actions/runs/43967640930) 已通过；**尚未真机验证，也不是安卓游戏内自动扫描**。[后续扫描任务 #3](https://github.com/yu-x-an/StarRail-AI/issues/3)。
 - ☐ 移植并实测 PC 角色面板导出到 Android touch_720；识别角色、星魂、光锥、技能、已装备遗器。
 - ☐ 对未装备遗器单独开发读取/导入，不能把已有导出当成完整背包。
 - ☐ 整合 Fribbels 等可复用的遗器优化思想与合法的授权导入格式；配装建议可解释。
