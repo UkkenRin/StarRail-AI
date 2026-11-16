@@ -43,6 +43,10 @@ def apply(upstream: Path):
     app.write_text(code, encoding="utf-8")
     strings.write_text(s, encoding="utf-8")
     shutil.copyfile(source, advisor)
+    oauth_source = OVERLAY / "app/src/main/kotlin/top/m7a/ui/ChatGptOAuth.kt"
+    if not oauth_source.is_file():
+        raise FileNotFoundError(oauth_source)
+    shutil.copyfile(oauth_source, advisor.with_name("ChatGptOAuth.kt"))
 
 
 if __name__ == "__main__":
