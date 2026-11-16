@@ -6,7 +6,7 @@
 
 - ☑ 创建跨平台仓库、GPL 许可、上游移植文档与 Android CI。
 - ☑ 安卓只读多 Provider 顾问页面源码（输入账号摘要和问题，调用兼容 Chat Completions）。
-- ◐ **确认 Android Actions 构建通过，上传并验证 Debug APK**；若失败，先修复，不要宣称已成功。
+- ✅ **Android Actions 构建通过，Debug APK 产物已上传**：2026-11-16 构建 [#43890667492](https://github.com/yu-x-an/StarRail-AI/actions/runs/43890667492)，产物名 `starrail-ai-android-debug`（仅 CI 验证，**尚未真机安装/测试**；当前产物保留至 2026-11-23）。
 - ☐ 独立 applicationId/应用名/签名策略，避免覆盖官方助手及安装冲突。
 - ☐ Android 真实设备安装、运行、模型 API 请求验证；记录日志（不含密钥）。
 - ☐ 配置 Windows 代码与测试 CI，形成跨平台共享核心包。
@@ -46,7 +46,7 @@
 
 ## 最近开发接续顺序
 
-1. 查最新 GitHub Actions 运行并解决第一个实际编译错误；生成可验证的 APK。
+1. 当前 CI 已成功；优先处理**独立 applicationId/签名兼容**并进行真机安装和调用测试。
 2. 解决独立安装包身份/签名，避免与官方 APK 冲突。
 3. 测试多供应商接口（不在仓库保存密钥）。
 4. 提取共享 AccountProfile + Python 导出数据契约，在 Windows/Linux 单元测试。
