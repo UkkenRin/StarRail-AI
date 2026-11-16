@@ -82,6 +82,10 @@
 7. [ ] 手机与 Windows 分别验证画面延迟、耗电、实时性、Token/费用；不允许未验证就宣称 AI 已能自动操作。
 8. [ ] 上述通过后才逐项开放高频战斗操作（动作白名单、停止开关、资源消耗确认）。
 
+## Windows-MCP 语义化观察层
+
+已评估 [CursorTouch/Windows-MCP](https://github.com/CursorTouch/Windows-MCP) 的 UI Automation、Snapshot、Screenshot 和输入工具。普通 Windows 软件可依靠 UIA 的结构化节点减少截图与 OCR，Android 也可利用 AccessibilityNodeInfo 做对应的语义观察；**星铁游戏内部 HUD 不保证暴露语义节点**，仍必须保留 Live Vision 画面输入。详见 [Windows-MCP 项目调查](WINDOWS_MCP_EVALUATION.md)。
+
 ## 外部资料
 
 - [OpenAI Computer Use 官方指南](https://developers.openai.com/api/docs/guides/tools-computer-use)
