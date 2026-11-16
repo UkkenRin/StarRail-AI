@@ -4,10 +4,11 @@ We maintain an upstream + overlay build until core control interfaces stabilize.
 
 ## Shared abstractions
 
-- GameObserver: local screenshots and OCR plus structured account state. Screenshot must be opt-in for cloud use. On-device OCR is preferred when sufficient.
+- FrameSource / GameObserver: continuous **local in-memory screen/video frame stream**, available separately on Android and Windows; vision AI can analyze selected frames **without mandatory OCR**. Optional local OCR only for exact numeric UI extraction. Remote video/frame submission must be user-authorized and budget-gated. See [LIVE_VISION.md](LIVE_VISION.md).
 - AccountProfile: character, light cone, equipped relic, and provenance/last-updated. Do not infer unobserved inventory.
 - AiProvider: ChatGPT OAuth (Android prototype submitted, not device-verified), API-key provider (initial Android MVP), multimodal provider (future). All tokens must stay off Git.
-- Planner: receives game state, user preferences, and action capability list. Outputs a typed plan and human-readable rationale.
+- VisualEventGate: local motion/state-change signatures, event filtering, focus and freshness checks, model call cooldown and request budget; core proof of concept in `starrail_core/live_vision.py` with no capture or cloud integration yet.
+- VisionAgent / Planner: receives selected keyframes or supported video input, game state, user preferences, and action capability list. Outputs typed decisions plus confidence, not arbitrary shell commands.
 - ActionGuard: validates current game package/display/scale, confidence, cooldown, and action allowlist. No model-authored raw shell commands; irreversible actions require explicit user consent.
 - GameExecutor: Windows native input, Android Shizuku virtual display, future Android physical display. Backend boundaries are explicit and tests are platform-specific.
 
