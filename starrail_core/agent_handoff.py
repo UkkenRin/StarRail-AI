@@ -59,6 +59,7 @@ class AgentHandoff:
         self.phase = ControlPhase.IDLE
         self.failure_reason: str | None = None
         self._lease: AgentLease | None = None
+        self._agent_origin_script = False
 
     def start_script(self, *, user_authorized: bool) -> None:
         """Only an explicit new user task can start the script."""
@@ -91,10 +92,32 @@ class AgentHandoff:
         """Grant temporary permission to attempt locally verified game actions."""
         if self.phase is not ControlPhase.SCRIPT_PAUSED:
             raise HandoffError("script must be stopped first")
+        return self._issue_lease(
+            user_authorized=user_authorized, game_focused=game_focused,
+            last_frame_ms=last_frame_ms, now_ms=now_ms, from_script=True,
+        )
+
+    def start_agent_direct(
+        self, *, user_authorized: bool, game_focused: bool,
+        last_frame_ms: int, now_ms: int,
+    ) -> AgentLease:
+        """An AI-first task need not launch an M7A script at all."""
+        if self.phase is not ControlPhase.IDLE:
+            raise HandoffError("direct AI task requires idle coordinator")
+        return self._issue_lease(
+            user_authorized=user_authorized, game_focused=game_focused,
+            last_frame_ms=last_frame_ms, now_ms=now_ms, from_script=False,
+        )
+
+    def _issue_lease(
+        self, *, user_authorized: bool, game_focused: bool,
+        last_frame_ms: int, now_ms: int, from_script: bool,
+    ) -> AgentLease:
         if not user_authorized or not game_focused or not self._fresh(last_frame_ms, now_ms):
             raise HandoffError("authorization, focused game or fresh frame missing")
         lease = AgentLease(secrets.token_urlsafe(24), now_ms + self.lease_ms)
         self._lease = lease
+        self._agent_origin_script = from_script
         self.phase = ControlPhase.AGENT_ACTIVE
         return lease
 
@@ -125,16 +148,22 @@ class AgentHandoff:
         if self.phase is not ControlPhase.AGENT_ACTIVE:
             raise HandoffError("AI has no control to relinquish")
         self._lease = None
-        if state_verified and script_can_resume:
-            self.failure_reason = None
-            self.phase = ControlPhase.SCRIPT_RUNNING
+        if self._agent_origin_script:
+            if state_verified and script_can_resume:
+                self.failure_reason = None
+                self.phase = ControlPhase.SCRIPT_RUNNING
+            else:
+                self.phase = ControlPhase.SCRIPT_PAUSED
         else:
-            self.phase = ControlPhase.SCRIPT_PAUSED
+            # AI-first sessions never start M7A just because a model asked.
+            self.phase = ControlPhase.IDLE if state_verified else ControlPhase.STOPPED
+        self._agent_origin_script = False
         return self.phase
 
     def stop(self) -> None:
         """Human override/revocation; the same task may never silently restart."""
         self._lease = None
+        self._agent_origin_script = False
         self.phase = ControlPhase.STOPPED
 
     @property
