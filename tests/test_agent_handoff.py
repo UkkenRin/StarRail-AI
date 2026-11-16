@@ -114,6 +114,49 @@ class HandoffTests(unittest.TestCase):
         self.assertFalse(self.action(next_lease).permitted)
         self.assertFalse(self.action(lease).permitted)
 
+    def test_agent_first_task_never_resumes_nonexistent_script(self):
+        lease = self.control.start_agent_direct(
+            user_authorized=True, game_focused=True,
+            last_frame_ms=1000, now_ms=1000,
+        )
+        self.assertFalse(self.control.script_may_send_input)
+        self.assertTrue(self.action(lease).permitted)
+        self.assertEqual(
+            self.control.finish_recovery(state_verified=True, script_can_resume=True),
+            ControlPhase.IDLE,
+        )
+        self.assertFalse(self.control.script_may_send_input)
+        with self.assertRaises(HandoffError):
+            self.control.grant_agent_control(
+                user_authorized=True, game_focused=True,
+                last_frame_ms=1000, now_ms=1000,
+            )
+        second = self.control.start_agent_direct(
+            user_authorized=True, game_focused=True,
+            last_frame_ms=2000, now_ms=2000,
+        )
+        self.assertNotEqual(lease.token, second.token)
+        self.assertEqual(self.control.finish_recovery(
+            state_verified=False, script_can_resume=False), ControlPhase.STOPPED)
+        self.assertFalse(self.control.agent_may_request_input)
+        with self.assertRaises(HandoffError):
+            self.control.start_agent_direct(
+                user_authorized=True, game_focused=True,
+                last_frame_ms=3000, now_ms=3000,
+            )
+
+    def test_direct_agent_requires_authorization_focus_and_fresh_frame(self):
+        for overrides in (
+            {"user_authorized": False}, {"game_focused": False},
+            {"last_frame_ms": 1}, {"last_frame_ms": 1002},
+        ):
+            args = dict(user_authorized=True, game_focused=True,
+                        last_frame_ms=1000, now_ms=1000)
+            args.update(overrides)
+            with self.assertRaises(HandoffError):
+                self.control.start_agent_direct(**args)
+        self.assertEqual(self.control.phase, ControlPhase.IDLE)
+
     def test_manual_stop_revokes_all_and_blocks_silent_restart(self):
         lease = self.grant()
         self.control.stop()
