@@ -34,6 +34,12 @@ class TestOverlay(unittest.TestCase):
             self.assertTrue((app.parent / "ChatGptOAuth.kt").is_file())
             self.assertTrue((app.parent / "AccountProfile.kt").is_file())
             self.assertTrue((root / "Android/app/src/test/kotlin/top/m7a/ui/AccountProfileTest.kt").is_file())
+            self.assertTrue((app.parent / "SceneCatalog.kt").is_file())
+            self.assertTrue((root / "Android/app/src/test/kotlin/top/m7a/ui/SceneCatalogTest.kt").is_file())
+            packaged = root / "Android/app/src/main/assets/starrail_ai_scenes.json"
+            self.assertTrue(packaged.is_file())
+            self.assertIn('"schema_version": 1', packaged.read_text(encoding="utf-8"))
+            self.assertIn('"ref": "v2026.11.17"', packaged.read_text(encoding="utf-8"))
             self.assertIn("org.json:json:", gradle.read_text())
             self.assertIn("top.starrailai", gradle.read_text())
             apply(root)
