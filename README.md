@@ -2,19 +2,37 @@
 
 跨平台《崩坏：星穹铁道》AI 助手实验项目。
 
-> **开发初期 / 非官方客户端。** 本项目以 [March7thAssistant](https://github.com/moesnow/March7thAssistant) 的开源实现为参考和运行底座，目标是把 PC 自动化、Android 后台控制、账号理解及多模型 AI 决策逐步结合。**当前还不是能自主通关的 AI 玩家。**
+> **开发初期 / 非官方客户端。** 本项目基于 [March7thAssistant](https://github.com/moesnow/March7thAssistant) 的开源运行底座，目标是结合 PC 自动化、Android 后台控制、账号理解和多模型自主决策。**尚不是可自主通关或无人值守游玩的 AI 玩家；源码提交、CI 成功不等于 iQOO/OriginOS 真机验收。**
+
+## 最新状态（2026-11-17）
+
+| 能力 | 主分支 / 实验分支实际状态 |
+| --- | --- |
+| Android 实体屏采集 | `main` 已有 MediaProjection 本地只读采样及屏幕预览；尚未真机验证 |
+| ChatGPT OAuth | `main` 已加入登录、模型列表、文字分析与**手动选一张截图的视觉分析**；真实账号和图像模型请求尚未真机验收 |
+| Gamer / GameScaling | [PR #21](https://github.com/UkkenRin/StarRail-AI/pull/21) **已合并**：200ms 动作协议、官方 GameScaling 可选 Python 只读接入、稀疏思考、受限单步验证接口和已验证经验缓存；**未接 Android 自动执行** |
+| Android Shizuku 实际触摸 | [PR #22](https://github.com/UkkenRin/StarRail-AI/pull/22) **待合并**：增加任务只读检查、经人工二次确认的一次「打开手机菜单」安全操作与新画面验证；未经过平板实测，且不是连续自主运行 |
+| Android 构建稳定性 | [PR #23](https://github.com/UkkenRin/StarRail-AI/pull/23) **待合并**：仅为 Gradle 插件间歇下载失败增加重试，不代表触控功能已在 `main` |
+| 完整 AI 游戏闭环 | **尚未完成安卓端到端真机验收**；Python 模拟测试不能替代设备结果 |
+
+当前最需要确认的是：**APK 能否安装、OAuth 视觉是否真的能看见星铁、实体屏与 Shizuku 是否可用**。之后再将已确认的安全触控接到连续 AI 决策和短期历史，避免模型重复工作。详见 [Gamer 运行器整合说明](docs/GAMER_RUNTIME_INTEGRATION.md)、[Android 真实设备接口](https://github.com/UkkenRin/StarRail-AI/blob/feat/android-trusted-device-port-20261117/docs/ANDROID_TRUSTED_DEVICE_PORT.md)。
+
 
 ## Android APK 固定下载链接（自动更新文件）
 
 **[下载 StarRail-AI 安卓 Debug APK](https://github.com/UkkenRin/StarRail-AI/releases/download/android-latest/StarRail-AI-debug.apk)** · [查看自动发布记录](https://github.com/UkkenRin/StarRail-AI/releases/tag/android-latest)
 
-每次 **main 分支的 Android CI 构建成功**，GitHub Actions 会自动更新该固定地址对应的安装包；如果构建失败，则保留上一份成功版本。该链接不会像临时 Workflow Artifact 那样 7 天后过期。首次启用自动发布需等待第一次成功的主分支构建。
+每次 **main 分支的 Android CI 构建成功**，GitHub Actions 才会更新这个固定地址；若构建失败，仍提供**上次成功的旧版本**。**固定链接当前不能用于验证尚未合并的 PR #22 Shizuku 单步功能。**
+
+需要验证 PR #22 的，请打开 [PR #22 成功构建 #44062971351](https://github.com/UkkenRin/StarRail-AI/actions/runs/44062971351) → 页面底部 **Artifacts** → `starrail-ai-android-debug`（可能需要登录 GitHub）→ 下载 ZIP → 在平板解压后安装 APK。这是临时测试产物，2026-11-24 预计过期；如果手机浏览器下载异常，优先使用对话中提供的已提取 APK。不要误把 GitHub Actions 页面当作 APK 下载直链。
 
 **注意：自动更新的是 GitHub 上供下载的文件，不是设备已安装的应用。** 当前使用临时 Debug 签名，各次 CI 构建可能无法直接覆盖安装；卸载旧版会清除应用内保存的数据。稳定签名和应用内更新检查属于后续任务。详细操作见 [安卓安装与验收说明](docs/ANDROID_INSTALL.md)。
 
-## Gamer / GameScaling 动作协议（只读接入）
+## Gamer / GameScaling：已接的组件与未完成部分
 
-已新增 **[Gamer / GameScaling 协议适配实验](docs/GAMER_ADAPTER.md)**：参考 Gamer 官方 200 毫秒、六组键鼠动作格式，给 StarRail-AI 的 Python 共享核心与 Android AI 顾问新增严格格式解析器和只读预览。异常格式、未知键、超界坐标一律拒绝。**没有引入 Gamer 模型权重，不调用其未公开的实时引擎，也不会从此界面触摸游戏。** 官方 Gamer 的《星穹铁道》演示模型不在公开源码中，实际动态视觉控制仍待实现。
+**[动作协议](docs/GAMER_ADAPTER.md)** 兼容公开的 Gamer 200ms / 6 步键鼠格式，Android 顾问提供只读预览。**[PR #21](https://github.com/UkkenRin/StarRail-AI/pull/21) 已合并** `starrail_core/gamer_runtime.py`、`sparse_thinking.py`、`gamer_step_cycle.py`、`verified_memory.py` 和官方 GameScaling 客户端的**可选 Python 只读适配器**。
+
+共享核心可以在**注入可信模型与设备端口的模拟测试**中完成「是否需要推理 → 语义动作预检 → 调用设备端口 → 新帧确认 → 写入已验证经验」。已经验证的同类局面可以复用动作而不再次请求模型；但模型提出的未执行动作不会进入成功记忆。**Android 当前没有将上述 Python 运行器连成连续游戏操控循环，也没有发布 Gamer-RL 权重或官方 Streaming-vLLM 实现。** 详见 [运行器整合记录](docs/GAMER_RUNTIME_INTEGRATION.md)。
 
 
 
@@ -26,15 +44,21 @@
 
 ## 安卓真实画面采集（第一阶段）
 
-安卓端新增了基于 **系统 MediaProjection 授权** 的**本地只读屏幕预览**实验源码：在「AI 顾问」页申请权限、采样当前屏幕至本机内存、查看最后一帧，并能从通知或页面停止。它不启动第二份游戏，不上传画面给模型，也不注入触摸。与原版后台虚拟屏任务保持隔离。
+安卓端已有基于 **系统 MediaProjection 授权** 的本地只读屏幕采集：在「AI 顾问」页申请权限、采样真实屏幕至内存、查看最后一帧，可从通知或页面停止。**采集本身不会上传截图或触摸游戏**；只有用户在单帧分析页面另外选择截图并再次确认，才会发送给选定的视觉模型。它与 M7A 后台虚拟屏区分，不启动第二份游戏。
 
-**这不等于 AI 已经能够观察并自动操作游戏**：目前无可靠的游戏焦点校验、VLM 调用、自动点击或故障接管。此能力需要通过 Android CI 和 iQOO/OriginOS 真机授权、旋转、停止测试后才能标记可用。见 [安卓本地画面采集说明](docs/ANDROID_LOCAL_CAPTURE.md)。
+**尚未实现无人值守视觉操控，也未在 iQOO Pad5 Pro / OriginOS 验收。** MediaProjection 本机预览、截图上传、当前焦点验证和 Shizuku 输入是不同的授权与安全环节，不能相互代替。见 [本地画面采集说明](docs/ANDROID_LOCAL_CAPTURE.md)。
+
+### PR #22：受限安卓游戏设备接口（尚未进入 main）
+
+[PR #22](https://github.com/UkkenRin/StarRail-AI/pull/22) 增加 Shizuku 设备状态只读检查，以及一次**人工二次授权、仅允许在本机重新核实星铁真实画面和任务状态后**执行的低风险「打开游戏手机菜单」操作。AI 单帧分析可以提出白名单 `safe_action=open_game_menu`，**模型不能指定原始坐标**。执行后通过同一采集会话的新画面验证；校验失败会阻止或停止，不能擅自重试。实际效果受 OriginOS、显示器尺寸、模板匹配与系统输入接口支持影响，**尚未在真机确认执行成功**。
+
+这个功能只属于 [PR #22 成功构建产物](https://github.com/UkkenRin/StarRail-AI/actions/runs/44062971351)，**不在当前固定地址下载的主分支稳定 APK 中**。详见 [Android 设备接口说明](https://github.com/UkkenRin/StarRail-AI/blob/feat/android-trusted-device-port-20261117/docs/ANDROID_TRUSTED_DEVICE_PORT.md)。
 
 
 
 **AI 是主驾驶，三月七小助手只是技能工具箱。** 用户希望 AI 在明确授权后直接观察、理解、规划并操控星铁；当已有自动化脚本无法识别新界面、操作失误或卡住时，AI 能在脚本真正停下后**接管游戏输入、尝试解决、验证结果**，并决定恢复原脚本还是继续独立操作。也支持不调用脚本的 **AI-first 模式**。详见 [自主游戏智能体目标与验收](docs/AUTONOMOUS_GAME_AGENT.md)。
 
-目前只有 `starrail_core/agent_handoff.py` 的**输入权交接/限时许可 Python 协议原型**与测试：**没有接入 Android/Windows 真实屏幕、模型控制、自动故障修复或可用的自主代打 APK**。要实现上述能力，还需要视觉观察、Agent Planner、受限执行器和真机端到端测试。
+目前已不止 `agent_handoff.py`：共享核心拥有单步协调器、稀疏思考、视觉预算门控和只在**结果验证成功后**更新的短期经验缓存，Android 端拥有单帧 OCR-free 视觉分析。**但各部分还没有接通为可在平板上无人值守的完整循环**；PR #22 的受限触控只是一项需要用户单独确认的安全试验。要实现真正自主游戏仍需安卓连续 FrameSource、可信 GameExecutor、AI 任务管理与真机失败恢复。
 
 ## 已接入源码：跨平台场景知识库
 
@@ -42,7 +66,7 @@
 
 ## 视觉 AI 手动看图（只读试验）
 
-安卓端新增了 [手动视觉 AI 单帧分析](docs/MANUAL_VISION_AI.md) 的实验源码：用户先采集并确认本机最后一帧，再通过二次明确同意，把一张压缩截图发送给**支持图像的 HTTPS API Key 模型**，得到场景判断与下一步建议。默认不上传、单进程最多 3 次、最短冷却 10 秒；不支持通过 ChatGPT 订阅直接使用该 API，不会自动点击或连续上传。此功能需要 Android CI 和真机/供应商接口验收。并非 Gamer 专用模型或完整实时游戏智能体。
+安卓端 [手动视觉 AI 单帧分析](docs/MANUAL_VISION_AI.md) 已支持**ChatGPT OAuth 已授权且具图像能力的模型**，或用户自己的 HTTPS API Key 视觉模型。用户先在本机采集一张图片，**二次确认后**才发送；默认不上传、单进程最多 3 次、至少间隔 10 秒，要求图片不超过 640px / 500KiB。返回场景、画面证据和下一步只读建议。**OAuth 已写入 App 代码并通过分支 CI，但真实账号的授权及视觉模型调用尚未真机验证。** 这不是连续云视频，也不会因此自动点击。PR #22 可选提出受限语义动作，但必须另外授权并通过本地校验。
 
 ## 新方向：Live Vision（直接视觉理解，不强制 OCR）
 
@@ -50,7 +74,7 @@
 
 架构和验收： [Live Vision 设计](docs/LIVE_VISION.md) · [省 Token 与云视觉上传预算](docs/TOKEN_BUDGET.md)。
 
-**安卓实体屏采集的实验性代码已新增，但尚未真机验证，也没有接入 AI 实时视觉操控。** 共享的纯 Python `LiveVisionGate` 目前只负责低成本帧事件预算门控；Android 本地预览尚未与其或视觉模型打通，Windows 采集驱动仍待实现。
+**安卓实体屏采集与「手动选一帧 → OAuth/API Key 视觉模型」已连接**，但尚未真机验证，也未接入 `GamerAgentRuntime` 的**连续**自动截图、推理与输入循环。共享 `LiveVisionGate` 仍负责事件触发预算门控，并非上传器；Windows 实时驱动仍待实现。
 
 ## 项目方向
 
@@ -66,9 +90,9 @@
 2. 应用本仓库 `android_overlay/` 下的实验性 AI UI 补丁。
 3. 按上游 Android 构建步骤编译 **debug APK**，以 Workflow Artifact 形式提供。
 
-当前 MVP：只读「AI 顾问」页面。支持 OpenAI/DeepSeek/通义/自定义 Chat Completions API Key；另增加 **ChatGPT OAuth 的安卓实验实现**（动态客户端注册、PKCE、loopback 回调、ID Token 验证、Keystore 凭据存储、模型列表、Responses API 流式请求）。OAuth 客户端代码曾在 [Actions #43893504654](https://github.com/UkkenRin/StarRail-AI/actions/runs/43893504654) **编译成功**；但未完成**真机登录与模型请求测试**，使用者仍可能遇到授权、系统浏览器回调或额度限制。当前 API Key 仍仅存页面内存。
+当前 `main` Android MVP：账号档案导入、本地画面观察、**手动单帧视觉 AI（OAuth / API Key）**、只读 Gamer 动作解析和场景知识库。OAuth 采用动态客户端注册、PKCE、loopback 回调、ID Token 验证、Keystore 凭据存储与 Responses 流式请求，**但尚未经过 iQOO 平板真实登录和图像分析验收**；API Key 不保存到持久设置。支持情况受模型权限和账号额度限制。
 
-**这里没有自动扫描账号、没有前台实体屏控制、也没有 AI 自主战斗。** 新增独立包名 `top.starrailai` 的构建与安装仍须单独验证。详见 [OAuth 状态及测试说明](docs/OAUTH.md)。
+**`main` 仍无 Android AI 自主战斗和无人值守点击。** PR #22 的实体屏单步执行测试在独立分支中，并非固定下载 APK 已有功能；包名 `top.starrailai`、签名兼容与 Shizuku 仍需真机验证。参见 [OAuth 测试](docs/OAUTH.md) 和 [Android 安装说明](docs/ANDROID_INSTALL.md)。
 
 ## 正在开发：真实账号档案导入
 
@@ -76,9 +100,9 @@
 
 ## 构建
 
-在 GitHub 仓库的 **Actions → Build Android experimental APK → Run workflow** 启动，成功后从本次运行页面下载 `starrail-ai-android-debug`。无需 PC。首次构建可能较久，需保持 Actions 可用并由 GitHub 提供网络资源。
+在 GitHub 仓库的 **Actions → Build Android experimental APK → Run workflow** 启动，成功后从本次运行页面的 **Artifacts** 下载 `starrail-ai-android-debug` ZIP，平板上解压并安装其中的 APK；Actions 产物**不是 APK 直链**，下载可能要求登录 GitHub，且会过期。
 
-**重要：** 实验 APK 已在源码层改为独立应用 ID（`top.starrailai`），但必须先通过新 CI 才能安装测试。不要使用历史旧 APK 来验证独立安装，且避免与官方三月七小助手同时接管游戏。安装与运行可能受游戏条款及账号风险约束。
+**要测试 Shizuku 受限真实单步，请选 PR #22 的 [成功构建 #44062971351](https://github.com/UkkenRin/StarRail-AI/actions/runs/44062971351)，不要选 README 顶部固定主分支 APK。** 首轮建议先测试安装、画面采集、OAuth 和「5 秒后只读检查」，不急于点击。源码中的应用 ID 为 `top.starrailai`，临时 Debug 签名可能阻止覆盖安装；卸载会清除应用数据。不要与原版 M7A 同时接管输入。自动化可能涉及游戏账号条款风险，不能保证不会触发限制。
 
 ## 开发约定与需求
 
