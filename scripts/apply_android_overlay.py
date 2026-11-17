@@ -98,7 +98,8 @@ def apply(upstream: Path):
                        "StarRailCaptureService.kt", "FrameObservation.kt",
                        "AndroidForegroundProbe.kt", "GamerProtocol.kt",
                        "GamerProtocolPreviewPanel.kt", "ManualVisionQuota.kt",
-                       "ManualVisionProposal.kt", "ManualVisionPanel.kt", "TrustedGameDevice.kt")
+                       "ManualVisionProposal.kt", "ManualVisionPanel.kt", "TrustedGameDevice.kt",
+                       "SafeGameMenuDetector.kt")
     for name in capture_sources:
         item = OVERLAY / "app/src/main/kotlin/top/m7a/ui" / name
         if not item.is_file():
