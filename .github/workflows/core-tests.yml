@@ -13,6 +13,7 @@ on:
       - 'data/game_scenes.json'
       - 'scripts/build_scene_knowledge.py'
       - 'tests/test_live_vision.py'
+      - 'tests/test_sparse_thinking.py'
       - '.github/workflows/core-tests.yml'
   pull_request:
     branches: [main]
@@ -23,6 +24,7 @@ on:
       - 'tests/test_agent_handoff.py'
       - 'tests/test_gamer_protocol.py'
       - 'tests/test_live_vision.py'
+      - 'tests/test_sparse_thinking.py'
       - 'data/game_scenes.json'
       - 'scripts/build_scene_knowledge.py'
       - '.github/workflows/core-tests.yml'
