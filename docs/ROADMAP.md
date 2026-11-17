@@ -44,6 +44,7 @@
 
 - ☑ 已提交 [AI 主驾驶与脚本接管设计](AUTONOMOUS_GAME_AGENT.md)：AI 可直接接管游戏，也可调用 M7A 后在失败时暂停脚本、自己操作并验证；目标是几乎全游戏自主执行，M7A 仅为工具。**目标和当前交付能力严格区分**。
 - ☑ 新增 [Gamer/GameScaling 动作协议只读适配](GAMER_ADAPTER.md)：Python 共享核心严格解析 Gamer 的 200ms/6 组键鼠动作格式，Android「AI 顾问」新增本地解析预览，附 Python/Kotlin 测试。未接入模型权重、触控执行器或实时游戏操控，需 CI 和真机核验。
+- ☑ **Gamer 风格稀疏推理门控（纯 Python 离线原型）**：`starrail_core/sparse_thinking.py` 对已知 M7A 技能和已验证缓存计划不重复请求模型，只在新目标、未知画面、脚本故障、验证异常等关键事件产生云推理候选；复用 `LiveVisionGate` 作为独立预算许可，重复帧不反复推理，单上下文限制重试。**尚未连接 M7A/真实观察/模型，不等于已经减少实际 Token 支出**。详见 [TOKEN_BUDGET.md](TOKEN_BUDGET.md)。
 - ☑ 已提交 `starrail_core/agent_handoff.py` 独占输入权协议原型：包含 AI-first / M7A 暂停确认 / 限时接管租约 / 动作许可 / 失败与复位，配套纯 Python 测试；**尚无真实画面观察、LLM 规划、平台执行器或 APK 集成**。
 - ☑ [安卓手动视觉 AI 单帧分析试验](MANUAL_VISION_AI.md)：用户二次确认上传**弹窗中固定的同一张截图**，2 分钟内、单进程最多 3 次、冷却 10 秒，发送低分辨率 JPEG 到 HTTPS 视觉 API。默认返回场景与下一步建议；额外明确勾选时可生成严格解析的 Gamer 200ms **只读**动作提案。禁止 HTTP 重定向转发截图/Key。**需 CI 与真机验收；没有实时控制或 Gamer 专用模型。**
 - ☐ Android/Windows FrameSource 和焦点检查，打通真实截图到视觉模型的场景理解。
