@@ -59,7 +59,20 @@ jobs:
           uv python install 3.14.8
           python=$(uv python find --no-project 3.14.8)
           "$python" app/prepare_wheels.py app/build/wheelhouse
-          ./gradlew --no-daemon :device-service:test :device-service:dexJar :app:testDebugUnitTest :app:assembleDebug "-Pm7a.hostPython=$python" -Pm7a.versionCode=1
+          # Upstream AGP plugin metadata fetch can fail intermittently on clean CI
+          # runners. A retry helps transient repository lookup failures only;
+          # all Gradle/Kotlin/test errors still fail if they persist.
+          for attempt in 1 2 3; do
+            if ./gradlew --no-daemon :device-service:test :device-service:dexJar :app:testDebugUnitTest :app:assembleDebug "-Pm7a.hostPython=$python" -Pm7a.versionCode=1; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Android build failed after 3 attempts."
+              exit 1
+            fi
+            echo "::warning::Gradle attempt $attempt failed; retrying after temporary repository resolution issue."
+            sleep 12
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: starrail-ai-android-debug
