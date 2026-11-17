@@ -35,10 +35,19 @@ internal fun parseManualVisionProposal(text: String): ManualVisionProposal {
     } catch (_: Exception) {
         error("AI 未返回可解析的 JSON，请使用支持图像输入的模型")
     }
-    val scene = json.optString("scene").trim().take(150)
-    val observations = json.optString("observations").trim().take(1500)
-    val nextStep = json.optString("next_step").trim().take(900)
-    val gamerAction = json.optString("gamer_action").trim().take(1400)
+    // optString silently coerces JSON null/arrays/numbers into misleading text.
+    // Fail closed on schema violations before showing a model-produced suggestion.
+    fun stringField(name: String): String {
+        val value = json.opt(name)
+        require(value is String) { "AI 返回字段 $name 必须是字符串" }
+        return value.trim()
+    }
+    val scene = stringField("scene").take(150)
+    val observations = stringField("observations").take(1500)
+    val nextStep = stringField("next_step").take(900)
+    // Never truncate a Gamer wire payload: clipping can change parsing semantics.
+    val gamerAction = stringField("gamer_action")
+    require(gamerAction.length <= 1400) { "AI 动作提案过长，已拒绝而非截断" }
     require(scene.isNotEmpty() && observations.isNotEmpty() && nextStep.isNotEmpty()) {
         "AI 缺少场景、画面证据或下一步建议"
     }
