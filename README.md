@@ -34,7 +34,7 @@
 
 架构和验收： [Live Vision 设计](docs/LIVE_VISION.md) · [省 Token 与云视觉上传预算](docs/TOKEN_BUDGET.md)。
 
-**当前应用没有实际前台录屏或 AI 实时视觉操控功能**。共享的纯 Python `LiveVisionGate` 仅负责低成本帧变化/事件预算门控，尚未连接 Android / Windows 屏幕采集驱动。
+**安卓实体屏采集的实验性代码已新增，但尚未真机验证，也没有接入 AI 实时视觉操控。** 共享的纯 Python `LiveVisionGate` 目前只负责低成本帧事件预算门控；Android 本地预览尚未与其或视觉模型打通，Windows 采集驱动仍待实现。
 
 ## 项目方向
 
