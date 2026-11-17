@@ -40,11 +40,9 @@ internal class AndroidForegroundProbe(context: Context) {
             while (events.hasNextEvent()) {
                 events.getNextEvent(event)
                 when (event.eventType) {
-                    UsageEvents.Event.ACTIVITY_RESUMED,
-                    UsageEvents.Event.MOVE_TO_FOREGROUND ->
+                    UsageEvents.Event.ACTIVITY_RESUMED ->
                         transitions.add(ForegroundTransition(event.packageName.orEmpty(), true, event.timeStamp))
-                    UsageEvents.Event.ACTIVITY_PAUSED,
-                    UsageEvents.Event.MOVE_TO_BACKGROUND ->
+                    UsageEvents.Event.ACTIVITY_PAUSED ->
                         transitions.add(ForegroundTransition(event.packageName.orEmpty(), false, event.timeStamp))
                 }
             }
