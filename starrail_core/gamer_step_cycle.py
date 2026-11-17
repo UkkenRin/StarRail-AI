@@ -171,6 +171,7 @@ class GamerStepCoordinator:
         if (
             source is None
             or expected is None
+            or not self.handoff.agent_may_request_input
             or now_ms < source.captured_at_ms
             or now_ms > ticket.expires_at_ms
             or next_frame.session_id != self.capture_session_id
