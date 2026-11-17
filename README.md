@@ -12,7 +12,11 @@
 
 **注意：自动更新的是 GitHub 上供下载的文件，不是设备已安装的应用。** 当前使用临时 Debug 签名，各次 CI 构建可能无法直接覆盖安装；卸载旧版会清除应用内保存的数据。稳定签名和应用内更新检查属于后续任务。详细操作见 [安卓安装与验收说明](docs/ANDROID_INSTALL.md)。
 
-## 致谢与开源来源
+## Gamer / GameScaling 动作协议（只读接入）
+
+已新增 **[Gamer / GameScaling 协议适配实验](docs/GAMER_ADAPTER.md)**：参考 Gamer 官方 200 毫秒、六组键鼠动作格式，给 StarRail-AI 的 Python 共享核心与 Android AI 顾问新增严格格式解析器和只读预览。异常格式、未知键、超界坐标一律拒绝。**没有引入 Gamer 模型权重，不调用其未公开的实时引擎，也不会从此界面触摸游戏。** 官方 Gamer 的《星穹铁道》演示模型不在公开源码中，实际动态视觉控制仍待实现。
+
+
 
 **诚挚感谢 [三月七小助手（March7thAssistant）](https://github.com/moesnow/March7thAssistant) 的发起者 moesnow 和所有贡献者。** 原项目历经长期开发维护，已实现成熟的画面识别、自动化任务、安卓/Windows 适配与 AI Skill。我们尊重他们投入的时间与劳动，**不会将这些成果当成自己的原创**。
 
