@@ -6,7 +6,7 @@
 
 - ☑ 创建跨平台仓库、GPL 许可、上游移植文档与 Android CI。
 - ☑ 安卓只读多 Provider 顾问页面源码（输入账号摘要和问题，调用兼容 Chat Completions）。
-- ✅ **Android Actions 构建通过，Debug APK 产物已上传**：2026-11-16 构建 [#43890667492](https://github.com/yu-x-an/StarRail-AI/actions/runs/43890667492)，产物名 `starrail-ai-android-debug`（仅 CI 验证，**尚未真机安装/测试**；当前产物保留至 2026-11-23）。
+- ✅ **Android Actions 构建通过，Debug APK 产物已上传**：2026-11-16 构建 [#43890667492](https://github.com/UkkenRin/StarRail-AI/actions/runs/43890667492)，产物名 `starrail-ai-android-debug`（仅 CI 验证，**尚未真机安装/测试**；当前产物保留至 2026-11-23）。
 - ☑ 已提交独立 applicationId `top.starrailai`、应用名补丁及测试；**新 CI、安装/签名兼容和 Shizuku 操作尚待验收**。
 - ☐ Android 真实设备安装、运行、模型 API 请求验证；记录日志（不含密钥）。
 - ☐ 配置 Windows 代码与测试 CI，形成跨平台共享核心包。
@@ -14,7 +14,7 @@
 
 ## P1：AI 账号理解（核心差异）
 
-- ✅ 已实现 PC characters.json v1 导入、来源/完整性/失败标记、安卓 Keystore 加密档案和本地备注；[PR #2](https://github.com/yu-x-an/StarRail-AI/pull/2) 已合并。[Android/JUnit 构建](https://github.com/yu-x-an/StarRail-AI/actions/runs/43967027440) 与 [Windows/Linux Python CI](https://github.com/yu-x-an/StarRail-AI/actions/runs/43967640930) 已通过；**尚未真机验证，也不是安卓游戏内自动扫描**。[后续扫描任务 #3](https://github.com/yu-x-an/StarRail-AI/issues/3)。
+- ✅ 已实现 PC characters.json v1 导入、来源/完整性/失败标记、安卓 Keystore 加密档案和本地备注；[PR #2](https://github.com/UkkenRin/StarRail-AI/pull/2) 已合并。[Android/JUnit 构建](https://github.com/UkkenRin/StarRail-AI/actions/runs/43967027440) 与 [Windows/Linux Python CI](https://github.com/UkkenRin/StarRail-AI/actions/runs/43967640930) 已通过；**尚未真机验证，也不是安卓游戏内自动扫描**。[后续扫描任务 #3](https://github.com/UkkenRin/StarRail-AI/issues/3)。
 - ☐ 移植并实测 PC 角色面板导出到 Android touch_720；识别角色、星魂、光锥、技能、已装备遗器。
 - ☐ 对未装备遗器单独开发读取/导入，不能把已有导出当成完整背包。
 - ☐ 整合 Fribbels 等可复用的遗器优化思想与合法的授权导入格式；配装建议可解释。
@@ -32,7 +32,7 @@
 
 ## P2.5：共享游戏场景知识
 
-- ✅ 已合并并通过 CI 的 [场景知识库](SCENE_KNOWLEDGE.md)：从固定 M7A `v2026.11.17` 提取 61 PC、20 安卓命名场景（68 唯一 ID），仅保留界面标签和导航图，不执行原版脚本。[Windows/Linux 测试](https://github.com/yu-x-an/StarRail-AI/actions/runs/43980970224) 和 [Android/JUnit/APK 构建](https://github.com/yu-x-an/StarRail-AI/actions/runs/43980970062) 均通过。Windows/Linux 使用 Python 公共接口；安卓顾问支持离线查找和手动选择。**尚未真机测试，也不是自动识别画面。**
+- ✅ 已合并并通过 CI 的 [场景知识库](SCENE_KNOWLEDGE.md)：从固定 M7A `v2026.11.17` 提取 61 PC、20 安卓命名场景（68 唯一 ID），仅保留界面标签和导航图，不执行原版脚本。[Windows/Linux 测试](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970224) 和 [Android/JUnit/APK 构建](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970062) 均通过。Windows/Linux 使用 Python 公共接口；安卓顾问支持离线查找和手动选择。**尚未真机测试，也不是自动识别画面。**
 - ☐ 利用 Live Vision / 本地模板匹配自动把实际屏幕映射为已知场景 ID，置信度不够时返回 unknown。
 - ☐ 将游戏敌人、技能、界面用途/按钮定义补成经过来源核对的场景知识，避免把静态导航图误当完整攻略。
 
@@ -58,7 +58,7 @@
 
 - ☑ 只读 API Key provider 页面提交：OpenAI/DeepSeek/通义/自定义（未实测）。
 - ☐ 校验模型请求的 HTTPS、日志隐私、错误与限流；增加 Keystore 安全存储和撤销功能。
-- ✅ ChatGPT OAuth 实验源码已提交（PKCE/state/动态注册/回调/RS256 验签/Keystore/Responses SSE），提交 [995df6e](https://github.com/yu-x-an/StarRail-AI/commit/995df6e57d72694cef3b8833d8c16a0a808987b8) 的 [CI](https://github.com/yu-x-an/StarRail-AI/actions/runs/43893504654) **编译成功**；**尚未真机授权、模型选择、请求与续期验证**。
+- ✅ ChatGPT OAuth 实验源码已提交（PKCE/state/动态注册/回调/RS256 验签/Keystore/Responses SSE），提交 [995df6e](https://github.com/UkkenRin/StarRail-AI/commit/995df6e57d72694cef3b8833d8c16a0a808987b8) 的 [CI](https://github.com/UkkenRin/StarRail-AI/actions/runs/43893504654) **编译成功**；**尚未真机授权、模型选择、请求与续期验证**。
 - ◐ **Live Vision 视觉智能体**：以本地持续画面流为基础，视觉模型直接分析关键画面，OCR 变为可选组件；独立 Android/Windows Capture 驱动、屏幕焦点保护、结构化行动接口待实现。已经新增纯 Python 帧事件预算门控和测试，**不代表 APK 已具备录屏或自动操控能力**。详见 [LIVE_VISION.md](LIVE_VISION.md)。
 - ☐ **低 Token 架构**：持续本地观察、不持续上传云端视频；实现事件触发、策略缓存、关键帧裁剪、调用冷却与去重、每任务/每日预算限额、用量统计和停止机制。详见 [TOKEN_BUDGET.md](TOKEN_BUDGET.md)。
 - ☐ 按需截图：用户授权与可见提示、局部裁剪、频率限制、调用统计与费用提醒。
