@@ -18,8 +18,10 @@ internal data class GamerActionChunk(
             scrollNotches == 0 && groups.all { it.isEmpty() }
 
     fun toWire(): String =
-        "<|action_start|>$mouseXPermille $mouseYPermille $scrollNotches ; " +
-            groups.joinToString(" ; ") { it.joinToString(" ") } + "<|action_end|>"
+        "<|action_start|>$mouseXPermille $mouseYPermille $scrollNotches " +
+            groups.joinToString(" ") { group ->
+                if (group.isEmpty()) ";" else "; " + group.joinToString(" ")
+            } + "<|action_end|>"
 }
 
 internal data class GamerParseResult(
