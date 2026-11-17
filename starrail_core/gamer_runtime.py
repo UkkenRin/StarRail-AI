@@ -11,7 +11,7 @@ lease. Do not wire this to arbitrary shell commands or model-selected pixels.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 
 from .agent_handoff import AgentLease
 from .gamer_protocol import parse_gamer_action
@@ -24,6 +24,29 @@ from .verified_memory import VerifiedGameMemory
 class ModelPort(Protocol):
     """VLM/Gamer adapter: consumes only consented image + verified short history."""
     def propose(self, image: Any, *, history_summary: str) -> str: ...
+
+
+class OfficialGameScalingModelPort:
+    """Opt-in bridge from the official GameScaling preview into this runtime.
+
+    The OFFICIAL client's read-only action is still untrusted; only our local
+    binder and freshly verified post-frame may turn it into history. Upstream
+    history_len=0 intentionally avoids recording unexecuted model suggestions.
+    """
+
+    def __init__(self, preview: Any, *, clock_ms: Callable[[], int]):
+        self.preview = preview
+        self.clock_ms = clock_ms
+
+    def propose(self, image: Any, *, history_summary: str) -> str:
+        # history_summary is verified local memory. GameScaling's training
+        # client accepts screenshots/controls, not this arbitrary text schema;
+        # do not silently graft it onto the official chat template.
+        response = self.preview.propose(
+            image, consent_for_this_frame=True, now_ms=self.clock_ms())
+        if not response.valid:
+            raise RuntimeError("official_gamescaling_preview_rejected")
+        return response.gamer_wire
 
 
 class TrustedGamePort(Protocol):
