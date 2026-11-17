@@ -29,6 +29,7 @@ def local_binding(message=GAMER_MENU_INTENT, *, seq=1, kind="open_game_menu",
         canonical_gamer_wire=parse_gamer_action(message).chunk.to_wire(),
         session_id="capture-1", sequence=seq, scene_id="overworld",
         kind=kind, verified_control_id=control, expected_event_id=event,
+        high_impact=False,  # Only the simulated `menu` control has a local low-risk policy.
     )
 
 
@@ -142,6 +143,17 @@ class GamerStepCycleTests(unittest.TestCase):
                          "high_impact_requires_confirmation")
         self.assertTrue(self.prepare(mapping=replace(
             high_impact, user_confirmed_high_impact=True)).permitted)
+
+    def test_unknown_binding_is_high_impact_by_default(self):
+        unclassified = LocalBinding(
+            canonical_gamer_wire=parse_gamer_action(GAMER_MENU_INTENT).chunk.to_wire(),
+            session_id="capture-1", sequence=1, scene_id="overworld",
+            kind="select_verified_control", verified_control_id="menu",
+            expected_event_id="menu_opened",
+        )
+        self.assertTrue(unclassified.high_impact)
+        self.assertEqual(self.prepare(mapping=unclassified).reason,
+                         "high_impact_requires_confirmation")
 
     def test_action_never_bypasses_m7a_input_owner(self):
         other = AgentHandoff()
