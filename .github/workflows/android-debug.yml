@@ -35,7 +35,7 @@ jobs:
       - name: Test local overlay
         run: python3 -m unittest discover -s tests -v
       - name: Fetch fixed upstream release
-        run: git clone --depth 1 --branch v2026.11.17 https://github.com/moesnow/March7thAssistant.git upstream
+        run: git clone --depth 1 --branch v2026.11.19 https://github.com/moesnow/March7thAssistant.git upstream
       - name: Validate fixed-upstream scene knowledge snapshot
         run: |
           python3 scripts/build_scene_knowledge.py upstream --output /tmp/starrail-scenes-verified.json
@@ -111,7 +111,7 @@ jobs:
 
           对应源代码：
           - StarRail-AI: https://github.com/$GITHUB_REPOSITORY/tree/$GITHUB_SHA
-          - 上游 March7thAssistant (固定版本 v2026.11.17): https://github.com/moesnow/March7thAssistant/tree/v2026.11.17
+          - 上游 March7thAssistant (固定版本 v2026.11.19): https://github.com/moesnow/March7thAssistant/tree/v2026.11.19
           - 许可信息： https://github.com/$GITHUB_REPOSITORY/blob/main/LICENSE
 
           本 APK 不等于 AI 已能自主玩游戏。它是 Debug 构建，自动更新的是下载链接中的 APK 文件，不会自动更新设备上已安装的应用。不同 CI 构建可能使用不同的临时 Debug 签名；覆盖安装可能失败。请先备份本地重要数据，避免直接卸载导致档案丢失。
