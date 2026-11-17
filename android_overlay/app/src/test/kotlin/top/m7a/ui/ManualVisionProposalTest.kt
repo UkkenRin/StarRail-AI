@@ -99,6 +99,24 @@ class ManualVisionProposalTest {
         assertTrue(enabled.contains("不会被发送给 Android"))
     }
 
+    @Test fun semanticIntentIsWhitelistOnlyAndNeverAnUnverifiedCoordinate() {
+        fun response(value: Any): String = JSONObject()
+            .put("scene", "主界面").put("observations", "左上角有菜单入口")
+            .put("next_step", "打开菜单")
+            .put("safe_action", value)
+            .put("gamer_action", "")
+            .toString()
+        val proposed = parseManualVisionProposal(response("open_game_menu"))
+        assertEquals("open_game_menu", proposed.safeActionId)
+        assertNull(proposed.gameActionParse)
+        assertTrue(runCatching { parseManualVisionProposal(response("tap(300,500)")) }.isFailure)
+        assertTrue(runCatching { parseManualVisionProposal(response("delete_relics")) }.isFailure)
+        assertTrue(runCatching { parseManualVisionProposal(response(7)) }.isFailure)
+        assertEquals("", parseManualVisionProposal(response("")).safeActionId)
+        assertTrue(manualVisionSystemPrompt(false, "打开手机菜单").contains("open_game_menu"))
+        assertTrue(manualVisionSystemPrompt(false, "打开手机菜单").contains("用户本次目标"))
+    }
+
     @Test fun rateLimitRejectsRapidCallsAndExhaustion() {
         val quota = ManualVisionQuota(maxRequests = 3, cooldownMs = 10_000L)
         assertNull(quota.consume(10_000L))
