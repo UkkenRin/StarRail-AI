@@ -203,6 +203,16 @@ class GamerStepCycleTests(unittest.TestCase):
                 self.assertTrue(gate.halted)
                 self.assertEqual(other.phase, ControlPhase.STOPPED)
 
+    def test_external_handoff_revocation_invalidates_pending_ticket(self):
+        pending = self.prepare()
+        self.handoff.stop()
+        outcome = self.gate.verify_step(
+            pending.ticket, next_frame=observed(2, 1100, events=("menu_opened",)),
+            now_ms=1100,
+        )
+        self.assertEqual(outcome.reason, "postcondition_not_verified_stopped")
+        self.assertTrue(self.gate.halted)
+
     def test_manual_stop_revokes_pending_ticket(self):
         pending = self.prepare()
         self.gate.stop()
