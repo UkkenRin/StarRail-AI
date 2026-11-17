@@ -32,11 +32,35 @@ class ManualVisionProposalTest {
         assertEquals(action, result.gamerAction)
     }
 
+    @Test fun unrequestedGamerActionIsStrippedEvenWhenModelIgnoresPrompt() {
+        val action = "<|action_start|>0 0 0 ; W ; W ; W ; W ; W ; W<|action_end|>"
+        val proposed = parseManualVisionProposal(JSONObject()
+            .put("scene", "探索").put("observations", "道路")
+            .put("next_step", "继续观察").put("gamer_action", action).toString())
+        val denied = restrictGamerSuggestion(proposed, allowGamerSuggestion = false)
+        assertTrue(denied.gamerAction.isEmpty())
+        assertNull(denied.gameActionParse)
+        val permittedPreview = restrictGamerSuggestion(proposed, allowGamerSuggestion = true)
+        assertEquals(action, permittedPreview.gamerAction)
+        assertTrue(permittedPreview.gameActionParse!!.valid)
+    }
+
     @Test fun malformedResponseRefused() {
         assertTrue(runCatching { parseManualVisionProposal("not JSON") }.isFailure)
         assertTrue(runCatching { parseManualVisionProposal("{\"scene\":\"X\"}") }.isFailure)
         assertTrue(runCatching { parseManualVisionProposal(" ") }.isFailure)
         assertTrue(runCatching { parseManualVisionProposal("x".repeat(12_001)) }.isFailure)
+    }
+
+    @Test fun gamerActionGenerationNeedsExplicitOptIn() {
+        val defaultPrompt = manualVisionSystemPrompt(false)
+        assertTrue(defaultPrompt.contains("gamer_action 必须始终为空字符串"))
+        assertFalse(defaultPrompt.contains("只有当键鼠映射非常明确"))
+        val enabled = manualVisionSystemPrompt(true)
+        assertTrue(enabled.contains("200 毫秒"))
+        assertTrue(enabled.contains("<|action_start|>"))
+        assertTrue(enabled.contains("不清楚按键时必须留空"))
+        assertTrue(enabled.contains("不会被发送给 Android"))
     }
 
     @Test fun rateLimitRejectsRapidCallsAndExhaustion() {

@@ -5,6 +5,10 @@ import android.os.SystemClock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.Image
+import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,6 +44,9 @@ internal fun ManualVisionPanel(
 ) {
     val scope = rememberCoroutineScope()
     var confirmSend by remember { mutableStateOf(false) }
+    var selectedFrame by remember { mutableStateOf<Bitmap?>(null) }
+    var selectedFrameElapsedMs by remember { mutableStateOf(0L) }
+    var allowGamerSuggestion by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("没有发送任何画面到云端") }
     var proposal by remember { mutableStateOf<ManualVisionProposal?>(null) }
@@ -49,27 +58,50 @@ internal fun ManualVisionPanel(
             "才会将一张压缩后的截图发给选定的视觉 AI API。可能包含游戏账号、通知或其他应用内容。")
         Text("仅支持可以接收图片的 API Key 模型；不使用 ChatGPT 账号 OAuth。" +
             "每次应用进程最多 3 次请求，至少间隔 10 秒；图片和模型回答不写入文件。")
+        Row {
+            Checkbox(checked = allowGamerSuggestion, onCheckedChange = { allowGamerSuggestion = it })
+            Text("可选：让 AI 同时给出 Gamer 格式动作提案（仅显示，不执行；不确定时为空）")
+        }
         if (provider == Provider.CHATGPT) {
             Text("请先在下方切换为支持图片的 API Key 服务。ChatGPT 订阅不等同于 API 访问。")
         }
         Button(
             enabled = !busy && bitmap != null && lastFrameElapsedMs > 0L &&
                 provider != Provider.CHATGPT && apiKey.isNotBlank() && model.isNotBlank(),
-            onClick = { confirmSend = true },
+            onClick = {
+                selectedFrame = bitmap
+                selectedFrameElapsedMs = lastFrameElapsedMs
+                confirmSend = true
+            },
         ) { Text(if (busy) "正在请求视觉 AI……" else "选择当前最后一帧，准备分析") }
 
         if (confirmSend) {
             AlertDialog(
-                onDismissRequest = { confirmSend = false },
-                title = { Text("确认上传一张截图？") },
-                text = { Text("将当前最后一帧的 JPEG 图片发送到 ${provider.title}，" +
-                    "仅用于这一次只读场景分析。图片可能含个人信息，" +
-                    "API 供应商可能按其规则存储或计费。不会自动连续发送，也不会点击游戏。") },
+                onDismissRequest = { confirmSend = false; selectedFrame = null },
+                title = { Text("确认上传所选的这一张截图？") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("将下方固定截图发送至 ${provider.title} / ${model.ifBlank { "未选模型" }}。" +
+                            "可能包含个人信息，API 供应商可能存储或计费。不会连续发送或点击游戏。")
+                        Text(if (allowGamerSuggestion)
+                            "本次额外请求 Gamer 200ms 键鼠动作提案，仅显示，不执行。"
+                        else "本次只分析场景，不请求键鼠动作。")
+                        selectedFrame?.let { frame ->
+                            Image(
+                                bitmap = frame.asImageBitmap(), contentDescription = "即将上传的固定截图",
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 220.dp),
+                                contentScale = ContentScale.Fit,
+                            )
+                        }
+                    }
+                },
                 confirmButton = {
                     TextButton(onClick = {
                         confirmSend = false
-                        val frame = bitmap
-                        val age = SystemClock.elapsedRealtime() - lastFrameElapsedMs
+                        val frame = selectedFrame
+                        val consentedToGamerSuggestion = allowGamerSuggestion
+                        val age = SystemClock.elapsedRealtime() - selectedFrameElapsedMs
+                        selectedFrame = null
                         when {
                             frame == null -> status = "当前没有可用截图"
                             age !in 0L..120_000L -> status = "截图已超过两分钟或时间无效，请重新采集"
@@ -90,7 +122,8 @@ internal fun ManualVisionPanel(
                                         val result = withContext(Dispatchers.IO) {
                                             runCatching {
                                                 queryManualVisionProposal(
-                                                    provider, customBase, apiKey, model, frame)
+                                                    provider, customBase, apiKey, model, frame,
+                                                    allowGamerSuggestion = consentedToGamerSuggestion)
                                             }
                                         }
                                         result.onSuccess {
@@ -107,7 +140,9 @@ internal fun ManualVisionPanel(
                     }) { Text("同意上传这一张") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { confirmSend = false }) { Text("不上传") }
+                    TextButton(onClick = { confirmSend = false; selectedFrame = null }) {
+                        Text("不上传")
+                    }
                 },
             )
         }
@@ -121,6 +156,9 @@ internal fun ManualVisionPanel(
                 Text("可选 Gamer 动作提案（仅预览）：" + result.gamerAction.take(280))
                 Text("严格解析结果：" + (result.gameActionParse?.reason ?: "未解析") +
                     "。即使格式正确也严禁执行。")
+                result.gameActionParse?.chunk?.groups?.forEachIndexed { index, keys ->
+                    Text("第 ${index + 1} 组：${keys.joinToString(" + ").ifBlank { "松开全部按键" }}")
+                }
             }
         }
     }
