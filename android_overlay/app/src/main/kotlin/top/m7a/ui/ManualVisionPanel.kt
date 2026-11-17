@@ -43,6 +43,9 @@ internal fun ManualVisionPanel(
     lastFrameElapsedMs: Long,
     oauth: ChatGptOAuth,
     oauthModel: String,
+    userGoal: String,
+    gameDevice: TrustedGameDevice,
+    captureRunning: Boolean,
 ) {
     val scope = rememberCoroutineScope()
     var confirmSend by remember { mutableStateOf(false) }
@@ -50,13 +53,17 @@ internal fun ManualVisionPanel(
     var selectedFrameElapsedMs by remember { mutableStateOf(0L) }
     var selectedModel by remember { mutableStateOf("") }
     var selectedProvider by remember { mutableStateOf(provider) }
+    var selectedGoal by remember { mutableStateOf("") }
+    var safeActionConfirm by remember { mutableStateOf(false) }
+    var safeActionRunning by remember { mutableStateOf(false) }
+    var safeActionStatus by remember { mutableStateOf("") }
     var allowGamerSuggestion by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("没有发送任何画面到云端") }
     var proposal by remember { mutableStateOf<ManualVisionProposal?>(null) }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("视觉 AI：手动分析最后一帧（只读试验）",
+        Text("视觉 AI：手动截图和受限语义动作提案",
             style = MaterialTheme.typography.titleMedium)
         Text("当前采集画面默认只存在本机内存。仅当你点击下方按钮并再次确认时，" +
             "才会将一张压缩后的截图发给选定的视觉 AI API。可能包含游戏账号、通知或其他应用内容。")
@@ -79,6 +86,7 @@ internal fun ManualVisionPanel(
                 selectedFrameElapsedMs = lastFrameElapsedMs
                 selectedProvider = provider
                 selectedModel = if (provider == Provider.CHATGPT) oauthModel else model
+                selectedGoal = userGoal.take(4000)
                 confirmSend = true
             },
         ) { Text(if (busy) "正在请求视觉 AI……" else "选择当前最后一帧，准备分析") }
@@ -109,6 +117,7 @@ internal fun ManualVisionPanel(
                         val frame = selectedFrame
                         val chosenProvider = selectedProvider
                         val chosenModel = selectedModel
+                        val chosenGoal = selectedGoal
                         val consentedToGamerSuggestion = allowGamerSuggestion
                         val age = SystemClock.elapsedRealtime() - selectedFrameElapsedMs
                         selectedFrame = null
@@ -133,11 +142,13 @@ internal fun ManualVisionPanel(
                                             runCatching {
                                                 if (chosenProvider == Provider.CHATGPT) {
                                                     oauth.analyzeFrame(
-                                                        chosenModel, frame, consentedToGamerSuggestion)
+                                                        chosenModel, frame, consentedToGamerSuggestion,
+                                                        userGoal = chosenGoal)
                                                 } else {
                                                     queryManualVisionProposal(
                                                         chosenProvider, customBase, apiKey, chosenModel, frame,
-                                                        allowGamerSuggestion = consentedToGamerSuggestion)
+                                                        allowGamerSuggestion = consentedToGamerSuggestion,
+                                                        userGoal = chosenGoal)
                                                 }
                                             }
                                         }
@@ -167,6 +178,16 @@ internal fun ManualVisionPanel(
             Text("场景判断：" + result.scene)
             Text("画面依据：" + result.observations)
             Text("下一步建议（未执行）：" + result.nextStep)
+            if (result.safeActionId == "open_game_menu") {
+                Text("模型提出语义动作：打开手机菜单。**尚未执行**；只有本机重新确认星铁主界面图标和系统目标后才允许一次点击。")
+                Button(
+                    enabled = !safeActionRunning && captureRunning,
+                    onClick = { safeActionConfirm = true },
+                ) { Text("单独授权 AI 建议的菜单操作") }
+                if (!captureRunning) {
+                    Text("先重新开启本机屏幕观察，才能进行本地安全验证。")
+                }
+            }
             if (result.gamerAction.isNotBlank()) {
                 Text("可选 Gamer 动作提案（仅预览）：" + result.gamerAction.take(280))
                 Text("严格解析结果：" + (result.gameActionParse?.reason ?: "未解析") +
@@ -175,6 +196,36 @@ internal fun ManualVisionPanel(
                     Text("第 ${index + 1} 组：${keys.joinToString(" + ").ifBlank { "松开全部按键" }}")
                 }
             }
+        }
+        if (safeActionConfirm) {
+            AlertDialog(
+                onDismissRequest = { safeActionConfirm = false },
+                title = { Text("允许执行一次 AI 建议的低风险操作？") },
+                text = { Text(
+                    "模型只提出“打开游戏手机菜单”的目标，没有触摸坐标。确认后请切换到星铁主界面。" +
+                    "本地 Shizuku 和屏幕图标核验成功才会触摸一次；任何验证不足立即停止。" +
+                    "操作结果必须由新画面确认，不会自动重复或执行其他动作。") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        safeActionConfirm = false
+                        safeActionRunning = true
+                        safeActionStatus = "正在等待切到星铁并验证本地游戏状态……"
+                        scope.launch {
+                            val outcome = withContext(Dispatchers.IO) {
+                                gameDevice.openVerifiedMenuOnce()
+                            }
+                            safeActionStatus = "${outcome.stage}: ${outcome.explanation}"
+                            safeActionRunning = false
+                        }
+                    }) { Text("只同意一次，切换到星铁") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { safeActionConfirm = false }) { Text("取消") }
+                },
+            )
+        }
+        if (safeActionStatus.isNotBlank()) {
+            Text("AI 语义动作执行器：" + safeActionStatus)
         }
     }
 }
