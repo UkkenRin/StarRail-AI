@@ -99,6 +99,7 @@ internal fun ManualVisionPanel(
                     TextButton(onClick = {
                         confirmSend = false
                         val frame = selectedFrame
+                        val consentedToGamerSuggestion = allowGamerSuggestion
                         val age = SystemClock.elapsedRealtime() - selectedFrameElapsedMs
                         selectedFrame = null
                         when {
@@ -122,7 +123,7 @@ internal fun ManualVisionPanel(
                                             runCatching {
                                                 queryManualVisionProposal(
                                                     provider, customBase, apiKey, model, frame,
-                                                    allowGamerSuggestion = allowGamerSuggestion)
+                                                    allowGamerSuggestion = consentedToGamerSuggestion)
                                             }
                                         }
                                         result.onSuccess {
