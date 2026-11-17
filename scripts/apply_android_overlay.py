@@ -73,6 +73,10 @@ def apply(upstream: Path):
     if not oauth_source.is_file():
         raise FileNotFoundError(oauth_source)
     shutil.copyfile(oauth_source, advisor.with_name("ChatGptOAuth.kt"))
+    oauth_vision_source = OVERLAY / "app/src/main/kotlin/top/m7a/ui/ChatGptVisionInput.kt"
+    if not oauth_vision_source.is_file():
+        raise FileNotFoundError(oauth_vision_source)
+    shutil.copyfile(oauth_vision_source, advisor.with_name("ChatGptVisionInput.kt"))
     profile_source = OVERLAY / "app/src/main/kotlin/top/m7a/ui/AccountProfile.kt"
     if not profile_source.is_file():
         raise FileNotFoundError(profile_source)
@@ -108,6 +112,10 @@ def apply(upstream: Path):
             raise FileNotFoundError(item)
         shutil.copyfile(item, test_output.with_name(name))
     shutil.copyfile(catalog_test, test_output.with_name("SceneCatalogTest.kt"))
+    oauth_vision_test = OVERLAY / "app/src/test/kotlin/top/m7a/ui/ChatGptVisionInputTest.kt"
+    if not oauth_vision_test.is_file():
+        raise FileNotFoundError(oauth_vision_test)
+    shutil.copyfile(oauth_vision_test, test_output.with_name("ChatGptVisionInputTest.kt"))
     asset_output = upstream / "Android/app/src/main/assets/starrail_ai_scenes.json"
     asset_output.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(knowledge, asset_output)
