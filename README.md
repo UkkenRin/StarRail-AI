@@ -4,6 +4,14 @@
 
 > **开发初期 / 非官方客户端。** 本项目以 [March7thAssistant](https://github.com/moesnow/March7thAssistant) 的开源实现为参考和运行底座，目标是把 PC 自动化、Android 后台控制、账号理解及多模型 AI 决策逐步结合。**当前还不是能自主通关的 AI 玩家。**
 
+## Android APK 固定下载链接（自动更新文件）
+
+**[下载 StarRail-AI 安卓 Debug APK](https://github.com/UkkenRin/StarRail-AI/releases/download/android-latest/StarRail-AI-debug.apk)** · [查看自动发布记录](https://github.com/UkkenRin/StarRail-AI/releases/tag/android-latest)
+
+每次 **main 分支的 Android CI 构建成功**，GitHub Actions 会自动更新该固定地址对应的安装包；如果构建失败，则保留上一份成功版本。该链接不会像临时 Workflow Artifact 那样 7 天后过期。首次启用自动发布需等待第一次成功的主分支构建。
+
+**注意：自动更新的是 GitHub 上供下载的文件，不是设备已安装的应用。** 当前使用临时 Debug 签名，各次 CI 构建可能无法直接覆盖安装；卸载旧版会清除应用内保存的数据。稳定签名和应用内更新检查属于后续任务。详细操作见 [安卓安装与验收说明](docs/ANDROID_INSTALL.md)。
+
 ## 致谢与开源来源
 
 **诚挚感谢 [三月七小助手（March7thAssistant）](https://github.com/moesnow/March7thAssistant) 的发起者 moesnow 和所有贡献者。** 原项目历经长期开发维护，已实现成熟的画面识别、自动化任务、安卓/Windows 适配与 AI Skill。我们尊重他们投入的时间与劳动，**不会将这些成果当成自己的原创**。
