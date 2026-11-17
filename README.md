@@ -18,7 +18,7 @@
 当前最需要确认的是：**APK 能否安装、OAuth 视觉是否真的能看见星铁、实体屏与 Shizuku 是否可用**。之后再将已确认的安全触控接到连续 AI 决策和短期历史，避免模型重复工作。详见 [Gamer 运行器整合说明](docs/GAMER_RUNTIME_INTEGRATION.md)、[Android 真实设备接口](https://github.com/UkkenRin/StarRail-AI/blob/feat/android-trusted-device-port-20261117/docs/ANDROID_TRUSTED_DEVICE_PORT.md)。
 
 
-> **当前设备问题（2026-11-17）**：iQOO Pad5 Pro / OriginOS 测试发现采集约 2 帧后停止更新、结束共享后疑似整个 App 重新启动。当前 main APK **不能被视为已通过屏幕采集验收**。对应的修复分支仅调整全屏 MediaProjection 授权、容错清理和无敏感数据的采集诊断；CI 成功仍需重装后验证，不代表已经解决全部 OriginOS 保活问题。优先测试读取诊断文字，不应启用自动触控。
+> **当前设备问题（2026-11-17）**：iQOO Pad5 Pro / OriginOS 测试发现采集约 2 帧后停止更新、结束共享后疑似整个 App 重新启动。当前 main APK **不能被视为已通过屏幕采集验收**。本次修复尝试全屏 MediaProjection 授权、容错清理和无敏感数据的采集诊断；即使 CI 成功仍需重装后验证，不代表已经解决全部 OriginOS 保活问题。优先测试读取诊断文字，不应启用自动触控。
 
 ## Android APK 固定下载链接（自动更新文件）
 
