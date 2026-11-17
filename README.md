@@ -4,6 +4,12 @@
 
 > **开发初期 / 非官方客户端。** 本项目以 [March7thAssistant](https://github.com/moesnow/March7thAssistant) 的开源实现为参考和运行底座，目标是把 PC 自动化、Android 后台控制、账号理解及多模型 AI 决策逐步结合。**当前还不是能自主通关的 AI 玩家。**
 
+## 核心定位：AI 几乎全游戏自主接管
+
+**AI 是主驾驶，三月七小助手只是技能工具箱。** 用户希望 AI 在明确授权后直接观察、理解、规划并操控星铁；当已有自动化脚本无法识别新界面、操作失误或卡住时，AI 能在脚本真正停下后**接管游戏输入、尝试解决、验证结果**，并决定恢复原脚本还是继续独立操作。也支持不调用脚本的 **AI-first 模式**。详见 [自主游戏智能体目标与验收](docs/AUTONOMOUS_GAME_AGENT.md)。
+
+目前只有 `starrail_core/agent_handoff.py` 的**输入权交接/限时许可 Python 协议原型**与测试：**没有接入 Android/Windows 真实屏幕、模型控制、自动故障修复或可用的自主代打 APK**。要实现上述能力，还需要视觉观察、Agent Planner、受限执行器和真机端到端测试。
+
 ## 已接入源码：跨平台场景知识库
 
 基于固定版本上游 M7A 的 PC **61** 个场景、触屏 **20** 个场景，生成 **68** 个去重场景 ID 和平台独立导航关系。知识库在 [data/game_scenes.json](data/game_scenes.json)，Python 共用接口在 [starrail_core/scene_knowledge.py](starrail_core/scene_knowledge.py)。安卓「AI 顾问」可**离线搜索并手动选场景**；之后连接模型时，仅按需发送选中场景的可读摘要。**不是实时识别游戏画面，不会自动操作，不会上传源代码脚本。** 详情：[场景知识库](docs/SCENE_KNOWLEDGE.md)。
