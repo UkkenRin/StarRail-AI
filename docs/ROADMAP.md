@@ -22,10 +22,13 @@
 
 ## P2：显示器与控制
 
-- ◐ 已完成 [Android MCP / 无障碍方案评估](ANDROID_MCP_EVALUATION.md)：本机 AccessibilityService 语义观察 + MediaProjection/Shizuku 画面流；待开发**只读节点诊断与实体屏画面采集**。仅为设计，尚未发布功能。
+- ☑ 已提交 **安卓实体屏 MediaProjection 只读采集第一阶段**（[说明](ANDROID_LOCAL_CAPTURE.md)）：AI 页面发起系统授权，前台服务低频读取本机预览，页面/通知停止，保留最后一帧供用户核验；不会向 GPT 上传或发送游戏触控。**需 Android CI 和 iQOO Pad5 Pro 真机验证，暂不宣称完整的实体屏模式可用**。
+
+
+- ◐ 已完成 [Android MCP / 无障碍方案评估](ANDROID_MCP_EVALUATION.md)，并开始实现实体屏 MediaProjection 只读帧采集；Accessibility 只读节点诊断、可信游戏焦点与真实设备验收仍待开发。
 
 - ☐ 在 Android 增加显示模式设置：后台虚拟屏 / 前台实体屏；保持现有功能为默认。
-- ☐ 实体屏截图技术选型和横屏映射；焦点必须为星铁，锁屏/错误包名即停。
+- ◐ MediaProjection 用户授权 + 本地低频截图与屏幕尺寸缩放源码已提交，必须补实体屏焦点/包名校验、横竖屏真机映射及锁屏/错误包名即停；不得用于 AI 点击。
 - ☐ 前台输入动作白名单、动作后取帧校验、停止按钮、防误触系统应用。
 - ☐ 真机比较 iQOO/OriginOS 后台限制、Shizuku 注入与服务恢复。
 - ☐ 可选会话复用与释放测试：不泄露虚拟屏、不遗留静音/显示状态。

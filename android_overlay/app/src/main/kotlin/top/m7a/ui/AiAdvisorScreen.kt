@@ -1,6 +1,9 @@
 package top.m7a.ui
 
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -8,6 +11,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +32,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -94,6 +102,26 @@ private fun analyze(
 internal fun AiAdvisorScreen() {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val captureState by LocalCaptureFrames.state.collectAsStateWithLifecycle()
+    var captureRequestPending by remember { mutableStateOf(false) }
+    val capturePicker = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        captureRequestPending = false
+        val grant = result.data
+        if (result.resultCode == Activity.RESULT_OK && grant != null) {
+            runCatching {
+                context.startForegroundService(
+                    Intent(context, StarRailCaptureService::class.java)
+                        .setAction(StarRailCaptureService.ACTION_START)
+                        .putExtra(StarRailCaptureService.EXTRA_RESULT, result.resultCode)
+                        .putExtra(StarRailCaptureService.EXTRA_GRANT, grant)
+                )
+            }.onFailure { error ->
+                LocalCaptureFrames.notice("启动画面观察服务失败：" + (error.message ?: "未知错误"))
+            }
+        } else {
+            LocalCaptureFrames.notice("已取消系统屏幕共享授权")
+        }
+    }
     val chatgpt = remember(context) { ChatGptOAuth(context.applicationContext) }
     val profileStore = remember(context) { AccountProfileStore(context.applicationContext) }
     val sceneLoad = remember(context) { runCatching { SceneCatalog.load(context.applicationContext) } }
@@ -144,6 +172,35 @@ internal fun AiAdvisorScreen() {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text("AI 账号顾问 · 实验版", style = MaterialTheme.typography.titleLarge)
+        Text("真实屏幕画面 · 本地只读试验", style = MaterialTheme.typography.titleMedium)
+        Text("点击后由 Android 系统请求共享权限。可以切到星铁，让本机采集画面；在系统通知中点「停止观察」后回到这里查看最后一帧。可能采到其他应用或敏感画面，请只在需要时授权。")
+        Text("这是你的真实屏幕采集，不是三月七小助手的后台游戏虚拟屏。画面仅保存在本机内存，不写入文件、不上传云端，也不允许 AI 操作。")
+        Button(enabled = !captureState.running && !captureRequestPending, onClick = {
+            runCatching {
+                captureRequestPending = true
+                val manager = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                capturePicker.launch(manager.createScreenCaptureIntent())
+            }.onFailure { error ->
+                captureRequestPending = false
+                LocalCaptureFrames.notice("无法申请录屏授权：" + (error.message ?: "未知错误"))
+            }
+        }) { Text(if (captureRequestPending) "等待系统授权……" else "授权并开始本地观察") }
+        if (captureState.running) {
+            Button(onClick = {
+                context.startService(Intent(context, StarRailCaptureService::class.java)
+                    .setAction(StarRailCaptureService.ACTION_STOP))
+            }) { Text("立即停止画面观察") }
+        }
+        Text(captureState.status, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (captureState.frames > 0) {
+            Text("本机采样：${captureState.frames} 帧 · ${captureState.width}×${captureState.height}；下方仅显示内存中的最后一帧")
+        }
+        captureState.preview?.let { bitmap ->
+            Image(bitmap = bitmap.asImageBitmap(), contentDescription = "本地采集画面预览",
+                modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp),
+                contentScale = ContentScale.Fit)
+            Button(onClick = { LocalCaptureFrames.clearPreview() }) { Text("清除本机预览") }
+        }
         Text("只读分析；不会控制游戏。你的账号档案只加密保存在本机，只有点击“让 AI 分析”才会将本次分析所需文字发给所选 AI。")
         Text("账号档案（实验版）", style = MaterialTheme.typography.titleMedium)
         Text("可以导入 PC 三月七小助手导出的 characters.json；目前不支持直接扫描安卓游戏，也不能获取未装备的全部遗器。")
