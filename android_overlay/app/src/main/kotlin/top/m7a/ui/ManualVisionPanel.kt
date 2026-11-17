@@ -72,7 +72,7 @@ internal fun ManualVisionPanel(
                         val age = SystemClock.elapsedRealtime() - lastFrameElapsedMs
                         when {
                             frame == null -> status = "当前没有可用截图"
-                            age !in 0..120_000 -> status = "截图已超过两分钟或时间无效，请重新采集"
+                            age !in 0L..120_000L -> status = "截图已超过两分钟或时间无效，请重新采集"
                             else -> {
                                 val limit = ManualVisionQuotaSession.quota.consume(
                                     SystemClock.elapsedRealtime())
