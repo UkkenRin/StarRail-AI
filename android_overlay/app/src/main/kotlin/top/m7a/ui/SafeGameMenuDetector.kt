@@ -6,70 +6,78 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import java.io.ByteArrayOutputStream
 import java.util.zip.ZipInputStream
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * Local template verification for exactly one low-risk game UI control:
- * opening the phone/menu from the overworld main screen.
+ * On-device visual control detection for exactly one low-impact goal:
+ * main screen -> phone menu, based on M7A touch_720/screens.json.
  *
- * Reference: M7A touch_720/screens.json main -> menu and main.png. Pixels
- * come only from a CURRENT local MediaProjection frame, never a model answer.
- * Fail-closed on unexpected aspect ratio or missing assets. The detector
- * intentionally does not accept model-selected coordinates.
+ * Model coordinates are NEVER accepted. Actual click coordinates are obtained
+ * from the independently matched local bitmap and scaled to display 0.
  */
 internal object SafeGameMenuDetector {
     private const val MAIN_TEMPLATE = "assets/touch_720/images/screen/main.png"
     private const val MENU_TEMPLATE = "assets/touch_720/images/screen/menu.png"
 
-    fun isOverworldMenuControlVisible(context: Context, frame: Bitmap): Boolean {
-        if (!validAspect(frame)) return false
-        // Source M7A guide: template is found in 18..90 x 60..138 on 1920x1080.
-        val left = (frame.width * 18.0 / 1920).toInt()
-        val top = (frame.height * 60.0 / 1080).toInt()
-        val right = (frame.width * 90.0 / 1920).toInt().coerceAtMost(frame.width)
-        val bottom = (frame.height * 138.0 / 1080).toInt().coerceAtMost(frame.height)
-        val template = loadTemplate(context, MAIN_TEMPLATE) ?: return false
+    internal data class MenuControlPoint(val x: Int, val y: Int, val score: Double)
+
+    fun findMainMenuControl(context: Context, frame: Bitmap): MenuControlPoint? {
+        if (frame.width < 300 || frame.height < 160) return null
+        val template = loadTemplate(context, MAIN_TEMPLATE) ?: return null
         return try {
-            findMatch(frame, template, left, top, right, bottom, threshold = 0.94)
-        } finally { template.recycle() }
+            // Source M7A main->menu target appears in the top-left HUD.
+            // Use the image rather than assume a 1920x1080/16:9 screen.
+            val region = Rect(0, 0, (frame.width * 0.16).toInt(), (frame.height * 0.30).toInt())
+            val hit = findMatch(frame, template, region, threshold = 0.94) ?: return null
+            val centerX = hit.x + hit.width / 2
+            val centerY = hit.y + hit.height / 2
+            // Never allow a matched pixel outside the expected harmless HUD region.
+            if (centerX <= 1 || centerY <= 1 ||
+                centerX > frame.width * 0.16 || centerY > frame.height * 0.30) null
+            else MenuControlPoint(centerX, centerY, hit.score)
+        } finally {
+            template.recycle()
+        }
     }
 
     fun isMenuVisible(context: Context, frame: Bitmap): Boolean {
-        if (!validAspect(frame)) return false
+        if (frame.width < 300 || frame.height < 160) return false
         val template = loadTemplate(context, MENU_TEMPLATE) ?: return false
         return try {
-            // Menu has no defined source crop; only useful as a POST-action
-            // additional clue; never authorize an input from this check.
-            findMatch(frame, template, 0, 0, frame.width, frame.height, threshold = 0.96)
-        } finally { template.recycle() }
+            // Post-action observer only: bounded 320px image, no target click.
+            val width = min(frame.width, 320)
+            val height = (frame.height.toDouble() * width / frame.width).toInt()
+            val small = Bitmap.createScaledBitmap(frame, width, height, true)
+            try {
+                findMatch(small, template, Rect(0, 0, small.width, small.height),
+                          threshold = 0.96) != null
+            } finally { if (small !== frame) small.recycle() }
+        } finally {
+            template.recycle()
+        }
     }
 
-    private fun validAspect(frame: Bitmap): Boolean =
-        frame.width >= 300 && frame.height >= 160 &&
-            frame.width.toDouble() / frame.height in 1.72..1.83
+    private data class Rect(val left: Int, val top: Int, val right: Int, val bottom: Int)
+    private data class Hit(val x: Int, val y: Int, val width: Int, val height: Int, val score: Double)
 
-    private fun loadTemplate(context: Context, name: String): Bitmap? =
-        runCatching {
-            context.assets.open("project.zip").use { source ->
-                ZipInputStream(source.buffered()).use { zip ->
-                    var found: Bitmap? = null
-                    while (true) {
-                        val entry = zip.nextEntry ?: break
-                        if (entry.name == name && !entry.isDirectory) {
-                            val bytes = readBoundedEntry(zip)
-                            if (bytes != null) {
-                                found = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                            }
-                            break
-                        }
-                        zip.closeEntry()
+    private fun loadTemplate(context: Context, name: String): Bitmap? = runCatching {
+        context.assets.open("project.zip").use { source ->
+            ZipInputStream(source.buffered()).use { zip ->
+                var found: Bitmap? = null
+                while (true) {
+                    val entry = zip.nextEntry ?: break
+                    if (entry.name == name && !entry.isDirectory) {
+                        val bytes = readBoundedEntry(zip)
+                        if (bytes != null) found = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        break
                     }
-                    found
+                    zip.closeEntry()
                 }
+                found
             }
-        }.getOrNull()
+        }
+    }.getOrNull()
 
     private fun readBoundedEntry(zip: ZipInputStream): ByteArray? {
         val output = ByteArrayOutputStream()
@@ -83,51 +91,63 @@ internal object SafeGameMenuDetector {
     }
 
     private fun findMatch(
-        frame: Bitmap, source: Bitmap,
-        left: Int, top: Int, right: Int, bottom: Int, threshold: Double,
-    ): Boolean {
-        val areaWidth = right - left
-        val areaHeight = bottom - top
-        if (areaWidth < 10 || areaHeight < 10 || source.width < 6 || source.height < 6) return false
-        // Smaller templates reduce CPU cost. Different scales fail closed
-        // rather than treating mismatched game resolutions as trusted input.
-        val baseScale = if (areaWidth > 100) frame.width / 1280.0
-            else min(areaWidth.toDouble() / source.width,
-                     areaHeight.toDouble() / source.height)
-        for (factor in listOf(1.0, 0.82, 0.68)) {
+        frame: Bitmap, source: Bitmap, region: Rect, threshold: Double,
+    ): Hit? {
+        val scanWidth = region.right - region.left
+        val scanHeight = region.bottom - region.top
+        if (scanWidth < 12 || scanHeight < 12 || source.width < 6 || source.height < 6) return null
+        val framePixels = IntArray(frame.width * frame.height)
+        frame.getPixels(framePixels, 0, frame.width, 0, 0, frame.width, frame.height)
+        val frameGray = IntArray(framePixels.size) { gray(framePixels[it]) }
+        val baseScale = frame.height / 720.0
+        var best: Hit? = null
+        for (factor in listOf(1.17, 1.0, 0.82, 0.68)) {
             val tw = (source.width * baseScale * factor).toInt()
             val th = (source.height * baseScale * factor).toInt()
-            if (tw !in 8..90 || th !in 8..90 || tw > areaWidth || th > areaHeight) continue
+            if (tw !in 8..90 || th !in 8..90 || tw > scanWidth || th > scanHeight) continue
             val scaled = Bitmap.createScaledBitmap(source, tw, th, true)
             try {
-                val templatePixels = IntArray(tw * th)
-                scaled.getPixels(templatePixels, 0, tw, 0, 0, tw, th)
-                val signature = IntArray(tw * th) { n -> grayscale(templatePixels[n]) }
-                // Bound full screen scan: sample at 2px. Main control scans
-                // the tiny expected top-left region at single-pixel precision.
-                val stride = if (areaWidth > 100) 3 else 1
-                for (y in top..bottom - th step stride) {
-                    for (x in left..right - tw step stride) {
-                        val observed = IntArray(tw * th)
-                        for (row in 0 until th) {
-                            for (col in 0 until tw) {
-                                observed[row * tw + col] = grayscale(frame.getPixel(x + col, y + row))
-                            }
+                val sourcePixels = IntArray(tw * th)
+                scaled.getPixels(sourcePixels, 0, tw, 0, 0, tw, th)
+                val ref = IntArray(sourcePixels.size) { gray(sourcePixels[it]) }
+                val step = if (scanWidth > 100) 3 else 1
+                for (y in region.top..region.bottom - th step step) {
+                    for (x in region.left..region.right - tw step step) {
+                        val similarity = scoreAt(ref, frameGray, frame.width, x, y, tw, th)
+                        if (similarity >= threshold &&
+                            (best == null || similarity > best.score)) {
+                            best = Hit(x, y, tw, th, similarity)
                         }
-                        if (normalizedCorrelation(signature, observed) >= threshold) return true
                     }
                 }
-            } finally {
-                if (scaled !== source) scaled.recycle()
-            }
+            } finally { if (scaled !== source) scaled.recycle() }
         }
-        return false
+        return best
     }
 
-    private fun grayscale(pixel: Int): Int =
+    private fun gray(pixel: Int): Int =
         (Color.red(pixel) * 299 + Color.green(pixel) * 587 + Color.blue(pixel) * 114) / 1000
 
-    /** Pure algorithm for deterministic JVM tests without an Android bitmap. */
+    private fun scoreAt(ref: IntArray, pixels: IntArray, stride: Int,
+                        x: Int, y: Int, width: Int, height: Int): Double {
+        var sumA = 0.0; var sumB = 0.0
+        var sqA = 0.0; var sqB = 0.0; var cross = 0.0
+        for (row in 0 until height) {
+            for (col in 0 until width) {
+                val a = ref[row * width + col].toDouble()
+                val b = pixels[(y + row) * stride + x + col].toDouble()
+                sumA += a; sumB += b
+                sqA += a * a; sqB += b * b; cross += a * b
+            }
+        }
+        val n = (width * height).toDouble()
+        val va = n * sqA - sumA * sumA
+        val vb = n * sqB - sumB * sumB
+        return if (va <= 1.0 || vb <= 1.0) -1.0
+            else ((n * cross - sumA * sumB) / sqrt(va * vb)).coerceIn(-1.0, 1.0)
+    }
+
+    /** Pure JVM-checkable template correlation, not an execution permit. */
     internal fun normalizedCorrelation(a: IntArray, b: IntArray): Double {
         if (a.size != b.size || a.size < 16) return -1.0
         val meanA = a.average()
