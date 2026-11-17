@@ -23,14 +23,13 @@ internal fun parseManualVisionProposal(text: String): ManualVisionProposal {
     require(text.length in 1..12_000) { "AI 返回内容为空或过长" }
     val raw = text.trim()
     // Allow providers that wrap JSON in a conventional single fenced block.
-    val payload = if (raw.startsWith("&#96;&#96;&#96;")) raw else raw
-    val trimmed = if (payload.startsWith("\u0060\u0060\u0060")) {
-        val firstLine = payload.indexOf('\n')
-        require(firstLine in 3..12 && payload.endsWith("\u0060\u0060\u0060")) {
+    val trimmed = if (raw.startsWith("\u0060\u0060\u0060")) {
+        val firstLine = raw.indexOf('\n')
+        require(firstLine in 3..12 && raw.endsWith("\u0060\u0060\u0060")) {
             "AI 未返回完整的 JSON"
         }
-        payload.substring(firstLine + 1, payload.length - 3).trim()
-    } else payload
+        raw.substring(firstLine + 1, raw.length - 3).trim()
+    } else raw
     val json = try {
         JSONObject(trimmed)
     } catch (_: Exception) {
