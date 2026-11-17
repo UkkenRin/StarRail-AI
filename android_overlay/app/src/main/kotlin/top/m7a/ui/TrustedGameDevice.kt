@@ -155,15 +155,15 @@ internal class TrustedGameDevice(private val context: Context) {
                     ) return@use MenuStepOutcome("blocked", "屏幕共享尺寸与真实设备显示器不一致")
 
                     if (tasks.state.value.busy) return@use MenuStepOutcome("blocked", "其他脚本正在运行")
+                    val targetFrame = current.preview
+                        ?: return@use MenuStepOutcome("blocked", "无可用目标截图")
+                    val inputX = width.toDouble() * localControl.x / targetFrame.width
+                    val inputY = height.toDouble() * localControl.y / targetFrame.height
                     val request = JSONObject()
                         .put("cmd", "tap")
                         .put("display_id", 0)
-                        .put("x", width.toDouble() * localControl.x /
-                            (current.preview?.width ?: return@use MenuStepOutcome(
-                                "blocked", "无可用目标截图")))
-                        .put("y", height.toDouble() * localControl.y /
-                            (current.preview?.height ?: return@use MenuStepOutcome(
-                                "blocked", "无可用目标截图")))
+                        .put("x", inputX)
+                        .put("y", inputY)
                         .put("duration_ms", 50)
                     // DeviceService routes this through targetUid=the game.
                     // No force flag, arbitrary model target, or shell access.
