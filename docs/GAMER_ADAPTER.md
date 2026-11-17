@@ -65,6 +65,22 @@ Gamer/GameScaling 输出的是**PC 键鼠意图**，不是可验证的 Android �
 
 已开始开发 [安卓手动视觉 AI 单帧分析](MANUAL_VISION_AI.md)：用用户选择的视觉模型服务端承担单张截图理解与高层建议推理，无需自己部署 Streaming-vLLM。默认只返回场景文字；用户也可以**额外勾选**生成 Gamer 兼容的 200ms 键鼠动作**只读提案**，用已存在的严格解析器展示六组按键。两种方式均没有可执行触摸权限，也不承诺 200ms 实时游戏控制。需要用户主动上传许可和模型图像输入支持，安卓触摸执行器仍未实现。
 
+## 官方 GameScaling 客户端复用：可选 Python 只读接入
+
+新增 `starrail_core/gamescaling_official.py`，不重新实现第三方 HTTP 推理客户端。它在**独立安装官方 GameScaling Python 包源码及其依赖**的环境里，复用官方：
+
+- `gamescaling.prompt.build_system_prompt`：按原版约定组织游戏规则、键位表和 200ms 输出格式；
+- `gamescaling.policy.PolicyConfig` / `GameScalingPolicy.act`：组装图像消息、模型推理请求和专用聊天模板；
+- `gamescaling.action.KEY_VOCAB`：核对是否为 GameScaling 已知训练按键。
+
+依据固定审查版本 `THUSI-Lab/GameScaling@843a32078bd1cc7316388fb64433556f61075d26`；上游 Apache-2.0 源码没有复制到本仓库。参阅 [官方仓库](https://github.com/THUSI-Lab/GameScaling)，实际部署需要单独下载它的源码、安装 requests/Pillow、按上游说明准备合法的兼容 vLLM 模型服务。**这不是安卓 APK 内置的模型或客户端**。
+
+安全边界：`ReadOnlyGameScalingPreview.propose(image, consent_for_this_frame=True, now_ms=...)` 必须由本地应用取得用户**对这一帧**的明确许可后调用，默认每实例最多三次请求、十秒冷却；远端地址仅允许 HTTPS，本机 vLLM 可用 loopback HTTP。任何请求错误、输出截断或不符合本仓库严格 Gamer 解析器的内容都拒绝。返回值固定为 `executable=False`，绝不能直接传给 Shizuku、ADB、Windows Input 或任意执行器。
+
+**为什么不直接沿用官方动作历史：** 当前 GameScaling 的 `Policy.act` 在返回后会把**提议的动作**记录到下一轮历史。StarRail-AI 尚未实际执行该动作，因此桥接层会在调用前后清空官方策略历史，避免模型误以为动作已完成。真正的连续闭环必须由本地执行器证实动作确实发生并已看到后续帧后，再记录历史。现阶段只做一次一帧的手动只读推理，不做持续上传或自动控制。
+
+该方案能利用真实开源的推理客户端，但官方 Gamer 里的专用 Streaming-vLLM、训练后的星铁 RL 权重仍没有随仓库公开；GameScaling 已有的 CPT 权重**不是** Gamer-RL 权重，也不代表星铁自主执行能力。
+
 ## 下一步
 
 - [ ] 接入真实模型生成 Gamer 兼容格式的**离线提案**，先在模拟画面上核验语义（不是本地试玩时就调用云）。
