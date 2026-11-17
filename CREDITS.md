@@ -21,7 +21,13 @@ StarRail-AI 希望在尊重原项目劳动成果的前提下，继续探索以 A
 
 共享游戏场景知识 `data/game_scenes.json` 根据三月七小助手固定版本的 PC/Android 场景配置生成；详细出处与限制见 [场景知识库说明](docs/SCENE_KNOWLEDGE.md)。
 
-## 许可证与再发布
+## Gamer / GameScaling 研究与协议参考致谢
+
+感谢 **[Gamer 研究项目](https://github.com/RainBowLuoCS/Gamer)**（miHoYo Honkai AI R&D Team 和合作研究人员）以及 **[THUSI-Lab/GameScaling](https://github.com/THUSI-Lab/GameScaling)** 研究者公开游戏视觉—语言—动作协议、技术文档和推理客户端思路。两仓库明确标注 Apache License 2.0，具体声明见各自 LICENSE。
+
+StarRail-AI 在 [协议实验文档](docs/GAMER_ADAPTER.md) 中记录对应动作格式来源，并**独立编写兼容协议的严格解析器**；没有复制/打包他们的代码、训练数据、权重或专用实时推理引擎，也不声称与原研究团队合作。未来如直接引入第三方源码、权重或模型，必须保留并遵守其适用许可证和使用限制，单独审核分发要求。
+
+
 
 - StarRail-AI 仓库提供 [GPL-3.0 许可证全文](LICENSE)；保留上游和第三方组件的适用版权及许可证通知。
 - 分发修改过的 APK 时，应按所适用许可证提供该版本**完整的对应源码**（包含相应的上游源码、修改内容、构建和安装所需脚本等，按 GPL 具体要求提供），并保留必要的版权及修改声明。**只提供一个仓库链接或本致谢页，不应被视为自动满足全部许可证义务**。
