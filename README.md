@@ -15,7 +15,7 @@
 | Android 构建稳定性 | [PR #23](https://github.com/UkkenRin/StarRail-AI/pull/23) **待合并**：仅为 Gradle 插件间歇下载失败增加重试，不代表触控功能已在 `main` |
 | 完整 AI 游戏闭环 | **尚未完成安卓端到端真机验收**；Python 模拟测试不能替代设备结果 |
 
-当前最需要确认的是：**APK 能否安装、OAuth 视觉是否真的能看见星铁、实体屏与 Shizuku 是否可用**。之后再将已确认的安全触控接到连续 AI 决策和短期历史，避免模型重复工作。详见 [Gamer 运行器整合说明](docs/GAMER_RUNTIME_INTEGRATION.md)、[Android 真实设备接口](docs/ANDROID_TRUSTED_DEVICE_PORT.md)。
+当前最需要确认的是：**APK 能否安装、OAuth 视觉是否真的能看见星铁、实体屏与 Shizuku 是否可用**。之后再将已确认的安全触控接到连续 AI 决策和短期历史，避免模型重复工作。详见 [Gamer 运行器整合说明](docs/GAMER_RUNTIME_INTEGRATION.md)、[Android 真实设备接口](https://github.com/UkkenRin/StarRail-AI/blob/feat/android-trusted-device-port-20261117/docs/ANDROID_TRUSTED_DEVICE_PORT.md)。
 
 
 ## Android APK 固定下载链接（自动更新文件）
@@ -52,7 +52,7 @@
 
 [PR #22](https://github.com/UkkenRin/StarRail-AI/pull/22) 增加 Shizuku 设备状态只读检查，以及一次**人工二次授权、仅允许在本机重新核实星铁真实画面和任务状态后**执行的低风险「打开游戏手机菜单」操作。AI 单帧分析可以提出白名单 `safe_action=open_game_menu`，**模型不能指定原始坐标**。执行后通过同一采集会话的新画面验证；校验失败会阻止或停止，不能擅自重试。实际效果受 OriginOS、显示器尺寸、模板匹配与系统输入接口支持影响，**尚未在真机确认执行成功**。
 
-这个功能只属于 [PR #22 成功构建产物](https://github.com/UkkenRin/StarRail-AI/actions/runs/44062971351)，**不在当前固定地址下载的主分支稳定 APK 中**。详见 [Android 设备接口说明](docs/ANDROID_TRUSTED_DEVICE_PORT.md)。
+这个功能只属于 [PR #22 成功构建产物](https://github.com/UkkenRin/StarRail-AI/actions/runs/44062971351)，**不在当前固定地址下载的主分支稳定 APK 中**。详见 [Android 设备接口说明](https://github.com/UkkenRin/StarRail-AI/blob/feat/android-trusted-device-port-20261117/docs/ANDROID_TRUSTED_DEVICE_PORT.md)。
 
 
 
