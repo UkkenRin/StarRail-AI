@@ -25,8 +25,9 @@ def apply(upstream: Path):
     app = upstream / "Android/app/src/main/kotlin/top/m7a/ui/App.kt"
     strings = upstream / "Android/app/src/main/res/values/strings.xml"
     gradle = upstream / "Android/app/build.gradle"
+    manifest = upstream / "Android/app/src/main/AndroidManifest.xml"
     advisor = upstream / "Android/app/src/main/kotlin/top/m7a/ui/AiAdvisorScreen.kt"
-    if not (app.is_file() and strings.is_file() and gradle.is_file()):
+    if not (app.is_file() and strings.is_file() and gradle.is_file() and manifest.is_file()):
         raise FileNotFoundError("Expected M7A Android source tree")
     code = app.read_text(encoding="utf-8")
     code = replace_once(code,
@@ -40,6 +41,17 @@ def apply(upstream: Path):
     gradle_code = replace_once(gradle_code,
         "    testImplementation 'junit:junit:4.13.2'",
         "    testImplementation 'junit:junit:4.13.2'\n    testImplementation 'org.json:json:20250517'")
+    m = manifest.read_text(encoding="utf-8")
+    m = replace_once(m,
+        '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />',
+        '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />\n'
+        '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />')
+    m = replace_once(m,
+        '        <service\n            android:name=".TaskRunnerService"',
+        '        <service\n            android:name=".ui.StarRailCaptureService"\n'
+        '            android:exported="false"\n'
+        '            android:foregroundServiceType="mediaProjection" />\n'
+        '        <service\n            android:name=".TaskRunnerService"')
     s = strings.read_text(encoding="utf-8")
     s = replace_once(s, '<string name="app_name">三月七小助手</string>',
                         '<string name="app_name">StarRail AI（实验版）</string>')
@@ -51,6 +63,7 @@ def apply(upstream: Path):
     app.write_text(code, encoding="utf-8")
     strings.write_text(s, encoding="utf-8")
     gradle.write_text(gradle_code, encoding="utf-8")
+    manifest.write_text(m, encoding="utf-8")
     shutil.copyfile(source, advisor)
     oauth_source = OVERLAY / "app/src/main/kotlin/top/m7a/ui/ChatGptOAuth.kt"
     if not oauth_source.is_file():
@@ -73,6 +86,16 @@ def apply(upstream: Path):
         if not required.is_file():
             raise FileNotFoundError(required)
     shutil.copyfile(catalog_source, advisor.with_name("SceneCatalog.kt"))
+    capture_sources = ("CaptureGeometry.kt", "LocalCaptureFrames.kt", "StarRailCaptureService.kt")
+    for name in capture_sources:
+        item = OVERLAY / "app/src/main/kotlin/top/m7a/ui" / name
+        if not item.is_file():
+            raise FileNotFoundError(item)
+        shutil.copyfile(item, advisor.with_name(name))
+    geometry_test = OVERLAY / "app/src/test/kotlin/top/m7a/ui/CaptureGeometryTest.kt"
+    if not geometry_test.is_file():
+        raise FileNotFoundError(geometry_test)
+    shutil.copyfile(geometry_test, test_output.with_name("CaptureGeometryTest.kt"))
     shutil.copyfile(catalog_test, test_output.with_name("SceneCatalogTest.kt"))
     asset_output = upstream / "Android/app/src/main/assets/starrail_ai_scenes.json"
     asset_output.parent.mkdir(parents=True, exist_ok=True)
