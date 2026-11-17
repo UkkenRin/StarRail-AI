@@ -39,6 +39,17 @@ class ManualVisionProposalTest {
         assertTrue(runCatching { parseManualVisionProposal("x".repeat(12_001)) }.isFailure)
     }
 
+    @Test fun gamerActionGenerationNeedsExplicitOptIn() {
+        val defaultPrompt = manualVisionSystemPrompt(false)
+        assertTrue(defaultPrompt.contains("gamer_action 必须始终为空字符串"))
+        assertFalse(defaultPrompt.contains("只有当键鼠映射非常明确"))
+        val enabled = manualVisionSystemPrompt(true)
+        assertTrue(enabled.contains("200 毫秒"))
+        assertTrue(enabled.contains("<|action_start|>"))
+        assertTrue(enabled.contains("不清楚按键时必须留空"))
+        assertTrue(enabled.contains("不会被发送给 Android"))
+    }
+
     @Test fun rateLimitRejectsRapidCallsAndExhaustion() {
         val quota = ManualVisionQuota(maxRequests = 3, cooldownMs = 10_000L)
         assertNull(quota.consume(10_000L))
