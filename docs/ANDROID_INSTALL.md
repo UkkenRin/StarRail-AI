@@ -48,4 +48,4 @@
 - 尚未实现：真正可信的游戏窗口焦点校验、模型实时视觉理解、游戏触控、AI 动态操作闭环、脚本失败后智能接管。
 - 参考 [安卓本地采集](ANDROID_LOCAL_CAPTURE.md) 和 [路线图](ROADMAP.md)。
 
-本 APK 继续使用固定的 March7thAssistant `v2026.11.17` 源码与本仓库 Android overlay 构建，开发和分发需遵守上游 GPL-3.0 及依赖许可证。
+本仓库构建计划使用固定的 March7thAssistant `v2026.11.19` 源码与本仓库 Android overlay 构建，开发和分发需遵守上游 GPL-3.0 及依赖许可证。
