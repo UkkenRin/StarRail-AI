@@ -43,7 +43,8 @@ class LocalBinding:
     kind: str
     verified_control_id: str
     expected_event_id: str
-    high_impact: bool = False
+    # Unknown controls are treated as high-impact until local policy proves otherwise.
+    high_impact: bool = True
     user_confirmed_high_impact: bool = False
 
 
