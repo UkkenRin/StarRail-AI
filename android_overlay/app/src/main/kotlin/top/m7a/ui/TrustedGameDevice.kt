@@ -111,9 +111,9 @@ internal class TrustedGameDevice(private val context: Context) {
                     if (reason != null) return@use MenuStepOutcome("blocked", reason)
                     val original = current.preview
                         ?: return@use MenuStepOutcome("blocked", "当前没有可核验的游戏画面")
-                    if (!SafeGameMenuDetector.isOverworldMenuControlVisible(app, original)) {
-                        return@use MenuStepOutcome("blocked", "未在当前实际画面中独立确认主界面菜单图标")
-                    }
+                    var localControl = SafeGameMenuDetector.findMainMenuControl(app, original)
+                        ?: return@use MenuStepOutcome(
+                            "blocked", "未在当前实际画面中独立定位主界面菜单图标")
 
                     // Re-read OS state immediately before dispatch. An old
                     // task-stack report or a newly changed frame invalidates
@@ -125,11 +125,14 @@ internal class TrustedGameDevice(private val context: Context) {
                     reason = MenuStepPolicy.check(inspection, current,
                         SystemClock.elapsedRealtime(), expectedSession = captureBefore.sessionId)
                     if (reason != null) return@use MenuStepOutcome("blocked", reason)
-                    if (current.frames != captureBefore.frames &&
-                        current.preview !== original &&
-                        !SafeGameMenuDetector.isOverworldMenuControlVisible(
-                            app, current.preview ?: original)) {
-                        return@use MenuStepOutcome("blocked", "画面变化后菜单图标不再匹配")
+                    if (current.preview !== original) {
+                        // Image changed between verification and dispatch:
+                        // re-detect the icon on the newer frame, never reuse a
+                        // stale/possibly shifted pixel coordinate.
+                        localControl = SafeGameMenuDetector.findMainMenuControl(
+                            app, current.preview ?: return@use MenuStepOutcome(
+                                "blocked", "更新后的本机画面缺失"))
+                            ?: return@use MenuStepOutcome("blocked", "画面变化后菜单图标不再匹配")
                     }
 
                     // Captured entire display must match the independently
@@ -148,16 +151,19 @@ internal class TrustedGameDevice(private val context: Context) {
                         }
                     }
                     if (width < 600 || height < 300 ||
-                        current.width != width || current.height != height ||
-                        width.toDouble() / height !in 1.72..1.83
+                        current.width != width || current.height != height
                     ) return@use MenuStepOutcome("blocked", "屏幕共享尺寸与真实设备显示器不一致")
 
                     if (tasks.state.value.busy) return@use MenuStepOutcome("blocked", "其他脚本正在运行")
                     val request = JSONObject()
                         .put("cmd", "tap")
                         .put("display_id", 0)
-                        .put("x", width * 54.0 / 1920.0)
-                        .put("y", height * 99.0 / 1080.0)
+                        .put("x", width.toDouble() * localControl.x /
+                            (current.preview?.width ?: return@use MenuStepOutcome(
+                                "blocked", "无可用目标截图")))
+                        .put("y", height.toDouble() * localControl.y /
+                            (current.preview?.height ?: return@use MenuStepOutcome(
+                                "blocked", "无可用目标截图")))
                         .put("duration_ms", 50)
                     // DeviceService routes this through targetUid=the game.
                     // No force flag, arbitrary model target, or shell access.
