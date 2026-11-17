@@ -55,6 +55,12 @@
 - ☐ 利用 Live Vision / 本地模板匹配自动把实际屏幕映射为已知场景 ID，置信度不够时返回 unknown。
 - ☐ 将游戏敌人、技能、界面用途/按钮定义补成经过来源核对的场景知识，避免把静态导航图误当完整攻略。
 
+## 当前 Gamer 关键组件接线（待合并集成 PR）
+
+- ☑ 在同一分支内接上已独立审查的 Gamer 单步协议与反馈、官方 GameScaling **可选只读 Python 客户端**、稀疏推理门控；新增可注入的 `GamerAgentRuntime` 与仅记录**已验证动作**的 `VerifiedGameMemory`，模拟 OS Port 的闭环测试验证成功后可不再重新请求模型。
+- ☑ Android 将已有 MediaProjection 手动选择帧 → ChatGPT OAuth Responses `input_image` → 只读场景分析接通（同一张图二次确认，每进程 3 次/冷却 10 秒）；需 Android CI 和 OAuth 真机图片模型实测。
+- ☐ 将此运行器接到安卓可信 FrameProof + 真正 Shizuku 手势执行和新帧后置验证；现阶段**没有自动点击、没有后台跑 Gamer**。见 [Gamer 接线说明](GAMER_RUNTIME_INTEGRATION.md)。
+
 ## P2.8：AI-first 自主游戏控制（替代“只是启动脚本”的错误定位）
 
 - ☑ 已提交 [AI 主驾驶与脚本接管设计](AUTONOMOUS_GAME_AGENT.md)：AI 可直接接管游戏，也可调用 M7A 后在失败时暂停脚本、自己操作并验证；目标是几乎全游戏自主执行，M7A 仅为工具。**目标和当前交付能力严格区分**。
