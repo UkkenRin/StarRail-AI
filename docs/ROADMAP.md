@@ -55,11 +55,18 @@
 - ☐ 利用 Live Vision / 本地模板匹配自动把实际屏幕映射为已知场景 ID，置信度不够时返回 unknown。
 - ☐ 将游戏敌人、技能、界面用途/按钮定义补成经过来源核对的场景知识，避免把静态导航图误当完整攻略。
 
-## 当前 Gamer 关键组件接线（待合并集成 PR）
+## 当前 Gamer 关键组件接线（PR #21 已合并，仍需实机接入）
 
 - ☑ 在同一分支内接上已独立审查的 Gamer 单步协议与反馈、官方 GameScaling **可选只读 Python 客户端**、稀疏推理门控；新增可注入的 `GamerAgentRuntime` 与仅记录**已验证动作**的 `VerifiedGameMemory`，模拟 OS Port 的闭环测试验证成功后可不再重新请求模型。
 - ☑ Android 将已有 MediaProjection 手动选择帧 → ChatGPT OAuth Responses `input_image` → 只读场景分析接通（同一张图二次确认，每进程 3 次/冷却 10 秒）；需 Android CI 和 OAuth 真机图片模型实测。
 - ☐ 将此运行器接到安卓可信 FrameProof + 真正 Shizuku 手势执行和新帧后置验证；现阶段**没有自动点击、没有后台跑 Gamer**。见 [Gamer 接线说明](GAMER_RUNTIME_INTEGRATION.md)。
+
+## Android 真实设备接口与受限 AI 语义动作（PR #22 待合并）
+
+- ☑ 已提交 Shizuku `DeviceAccess` 真实探测接口：不启动 M7A 脚本，独立认证设备服务、只监控 watchdog 与 Android 任务/显示器/锁屏状态；并发 M7A 输入占用时拒绝。
+- ☑ 已提交可调用的安卓受限一次性单步：用户单独确认后，必须让本机实时截图、主界面图标模板、当前任务 UID/屏幕尺寸等全部匹配，才通过设备服务向星铁 UID 投递一次打开手机菜单的触摸；新画面不能确认就停止，不重试。
+- ☑ OAuth/API Key 单帧视觉分析新增 `safe_action=open_game_menu` 语义提案（其余意图不在白名单），可由用户二次确认后交给**本地重新验证的**安卓单步执行器；模型没有原始坐标或任意设备执行权。
+- ☐ 必须通过 Android 构建及 iQOO Pad5 Pro/OriginOS 真机实测，不能用 CI 证明实际点击成功；还需接上 `GamerAgentRuntime` 的后台连续观察与实际 OS 输入、状态记忆，才能叫“AI 自主玩游戏”。见 [执行器说明](ANDROID_TRUSTED_DEVICE_PORT.md)。
 
 ## P2.8：AI-first 自主游戏控制（替代“只是启动脚本”的错误定位）
 

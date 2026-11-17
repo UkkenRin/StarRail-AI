@@ -59,7 +59,20 @@ jobs:
           uv python install 3.14.8
           python=$(uv python find --no-project 3.14.8)
           "$python" app/prepare_wheels.py app/build/wheelhouse
-          ./gradlew --no-daemon :device-service:test :device-service:dexJar :app:testDebugUnitTest :app:assembleDebug "-Pm7a.hostPython=$python" -Pm7a.versionCode=1
+          # Upstream AGP 9.4.0 lookup has intermittently failed on GitHub's
+          # clean runners, even when the exact same commit built successfully.
+          # Retry only resolution/build failures; still fail the job if unresolved.
+          for attempt in 1 2 3; do
+            if ./gradlew --no-daemon :device-service:test :device-service:dexJar :app:testDebugUnitTest :app:assembleDebug "-Pm7a.hostPython=$python" -Pm7a.versionCode=1; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Android build failed after 3 attempts."
+              exit 1
+            fi
+            echo "::warning::Gradle attempt $attempt failed (possible plugin repository outage), retrying..."
+            sleep 12
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: starrail-ai-android-debug

@@ -125,6 +125,12 @@ internal fun AiAdvisorScreen() {
         }
     }
     val chatgpt = remember(context) { ChatGptOAuth(context.applicationContext) }
+    val trustedGameProbe = remember(context) { TrustedGameDevice(context.applicationContext) }
+    var inspectingGame by remember { mutableStateOf(false) }
+    var gameInspection by remember { mutableStateOf<GameDeviceInspection?>(null) }
+    var menuStepConfirm by remember { mutableStateOf(false) }
+    var menuStepRunning by remember { mutableStateOf(false) }
+    var menuStepOutcome by remember { mutableStateOf<MenuStepOutcome?>(null) }
     val profileStore = remember(context) { AccountProfileStore(context.applicationContext) }
     val sceneLoad = remember(context) { runCatching { SceneCatalog.load(context.applicationContext) } }
     val sceneCatalog = sceneLoad.getOrNull()
@@ -194,6 +200,70 @@ internal fun AiAdvisorScreen() {
             }) { Text("立即停止画面观察") }
         }
         Text(captureState.status, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Shizuku 游戏任务探测（只读）", style = MaterialTheme.typography.titleMedium)
+        Text("这是从 M7A 设备服务读取的 Android 任务栈、屏幕与锁屏状态。" +
+            "点击按钮后切换到星铁，约五秒后采样，随后回到本页查看。" +
+            "不运行 M7A 脚本、不创建虚拟屏、不点击、不发送截图给模型。" +
+            "任务栈可见不等于真实窗口焦点，严禁据此直接触控。")
+        Button(enabled = !inspectingGame, onClick = {
+            inspectingGame = true
+            gameInspection = null
+            scope.launch {
+                val outcome = withContext(Dispatchers.IO) {
+                    trustedGameProbe.inspect(afterMs = 5_000L)
+                }
+                gameInspection = outcome
+                inspectingGame = false
+            }
+        }) { Text(if (inspectingGame) "正在通过 Shizuku 检查……" else "5 秒后只读检查星铁状态") }
+        gameInspection?.let { proof ->
+            Text(proof.status + "；游戏任务：" + (if (proof.hasGameTask) "已找到" else "未确认") +
+                "，显示器 0：" + (if (proof.taskOnDefaultDisplay) "是" else "未确认") +
+                "，画面可见：" + (if (proof.taskVisible) "是" else "未确认") +
+                "，游戏主界面：" + (if (proof.mainActivityOnTop) "是" else "未确认"))
+            Text("即使全部通过，也只是本机任务候选，不允许 AI 自动点击。" +
+                "此诊断不保存系统任务历史、截图或设备令牌。")
+        }
+        Text("受限真机单步测试 · 只打开游戏手机菜单", style = MaterialTheme.typography.titleMedium)
+        Text("此功能是本地执行器验证，不由模型直接选坐标。必须保持本机屏幕观察运行、Shizuku 已授权、游戏主界面菜单图标由本地模板匹配。" +
+            "会再次检查游戏所在显示器、当前截图及系统任务，点击只定向星铁 UID。" +
+            "同意后切换到星铁；若画面无法验证，不执行。新画面没有确认手机菜单则立即停止。")
+        Button(enabled = !menuStepRunning && !inspectingGame && captureState.running,
+            onClick = {
+                menuStepOutcome = null
+                menuStepConfirm = true
+            }) { Text(if (menuStepRunning) "正在验证受限单步……" else "准备测试 AI 设备执行器（打开菜单一次）") }
+        if (menuStepConfirm) {
+            AlertDialog(
+                onDismissRequest = { menuStepConfirm = false },
+                title = { Text("确认一次低风险游戏操作？") },
+                text = {
+                    Text("确认后请立即切换到星铁主界面，不要打开其他应用或系统弹窗。" +
+                        "约五秒后，应用只在本地图标、Shizuku 任务、显示器和实时画面都核验成功时点击一次左上角手机菜单按钮。" +
+                        "不会战斗、抽卡、花费资源或执行模型的原始点击坐标。" +
+                        "随时可以在通知栏停止屏幕观察，中断执行前检查。")
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        menuStepConfirm = false
+                        menuStepRunning = true
+                        scope.launch {
+                            val outcome = withContext(Dispatchers.IO) {
+                                trustedGameProbe.openVerifiedMenuOnce()
+                            }
+                            menuStepOutcome = outcome
+                            menuStepRunning = false
+                        }
+                    }) { Text("同意一次，切换到星铁") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { menuStepConfirm = false }) { Text("取消") }
+                },
+            )
+        }
+        menuStepOutcome?.let { result ->
+            Text("执行器结果：${result.stage} · ${result.explanation}")
+        }
         Text("游戏前台提示（可选）：Android「使用情况访问」权限仅供诊断，不是可执行触控的焦点验证。没有授权也能继续采集本机预览。")
         Button(onClick = {
             runCatching {
@@ -369,6 +439,9 @@ internal fun AiAdvisorScreen() {
             lastFrameElapsedMs = captureState.lastFrameElapsedMs,
             oauth = chatgpt,
             oauthModel = oauthModel,
+            userGoal = question,
+            gameDevice = trustedGameProbe,
+            captureRunning = captureState.running,
         )
         OutlinedTextField(value = account, onValueChange = { if (it.length <= 12000) account = it },
             label = { Text("手动补充账号信息 / 培养偏好（可不填）") },

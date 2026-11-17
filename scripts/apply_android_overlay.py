@@ -98,14 +98,15 @@ def apply(upstream: Path):
                        "StarRailCaptureService.kt", "FrameObservation.kt",
                        "AndroidForegroundProbe.kt", "GamerProtocol.kt",
                        "GamerProtocolPreviewPanel.kt", "ManualVisionQuota.kt",
-                       "ManualVisionProposal.kt", "ManualVisionPanel.kt")
+                       "ManualVisionProposal.kt", "ManualVisionPanel.kt", "TrustedGameDevice.kt",
+                       "SafeGameMenuDetector.kt")
     for name in capture_sources:
         item = OVERLAY / "app/src/main/kotlin/top/m7a/ui" / name
         if not item.is_file():
             raise FileNotFoundError(item)
         shutil.copyfile(item, advisor.with_name(name))
     capture_tests = ("CaptureGeometryTest.kt", "FrameObservationTest.kt",
-                     "GamerProtocolTest.kt", "ManualVisionProposalTest.kt")
+                     "GamerProtocolTest.kt", "ManualVisionProposalTest.kt", "TrustedGameDeviceTest.kt")
     for name in capture_tests:
         item = OVERLAY / "app/src/test/kotlin/top/m7a/ui" / name
         if not item.is_file():
