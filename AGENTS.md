@@ -59,6 +59,9 @@
 
 - **不要仅生成临时 ZIP 作为“已开发完成”**。优先提交 GitHub 可追溯代码、测试、Issue/PR、CI，并提供可用链接。
 - 每次开发前先检查仓库真实 HEAD、Actions、现有 Issues 和上游版本；以实际仓库文件为准，不依赖过去对话里未经验证的 ZIP/版本。
+- **README 与功能代码同一个 PR 强制同步（不得事后补）**：任何改变 `starrail_core/`、`android_overlay/`、`data/`、`scripts/` 或 Android APK 构建工作流的 PR，都应同时更新根目录 `README.md`。如功能仍未验收，明确标注源码 / CI / 真机状态；更新用户可见能力、入口及下载方式。纯文档、普通测试变更不必强行修改 README。
+- **先更新 README，再提交功能 PR**：PR 描述必须列出 README 修改摘要与链接，明确「已实现、CI 已通过、设备尚未验证」的区别。不能让 README 只说“只读”而代码已加入新的实验执行器，也不能把新分支特性当作 main 已上线。
+- **CI 守门但不替代人工核对**：`.github/workflows/readme-sync.yml` 对相关代码 PR 检查 `README.md` 是否随 PR 修改；即使 CI 通过，仍要审阅措辞是否符合代码状态。旧 PR 如在本规则上线后重新提交，也必须遵守。
 - 修改尽量拆成可 review 的分支/PR；不悄悄覆盖用户工程或破坏上游日常功能。
 - 构建 APK 前测试 Python/Kotlin/资源/Android Gradle 依赖；以 Actions 通过、产物真实存在为准，**不得把源码、静态检查、排队中的 CI 称为可安装 APK**。
 - 先让 CI 的 debug APK 可安装/运行，再让 Android 账号导出和前台显示通过真机验收；正式发布考虑唯一 applicationId/独立签名、升级/备份与开源许可证。
