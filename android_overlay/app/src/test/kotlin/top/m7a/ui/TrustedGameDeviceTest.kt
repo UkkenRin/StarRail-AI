@@ -65,6 +65,33 @@ class TrustedGameDeviceTest {
         }
     }
 
+    @Test fun guardedMenuStepBlocksWithoutLiveConfirmedGameCapture() {
+        val inspect = GameDeviceInspection.fromDeviceStatus(status(), 100_000L)
+        val baseline = LocalCaptureState(
+            running = true, sessionId = 7L, frames = 2L,
+            lastFrameElapsedMs = 99_600L,
+            projectionVisible = true,
+            foregroundHint = ForegroundHint.GAME_CANDIDATE,
+        )
+        // Test frames are deliberately missing Android Bitmaps: fail closed.
+        assertTrue(MenuStepPolicy.check(inspect, baseline, 100_000L, 7L) != null)
+        assertTrue(MenuStepPolicy.check(inspect, baseline.copy(running = false), 100_000L, 7L) != null)
+        assertTrue(MenuStepPolicy.check(inspect, baseline.copy(sessionId = 8L), 100_000L, 7L) != null)
+        assertTrue(MenuStepPolicy.check(inspect, baseline.copy(
+            foregroundHint = ForegroundHint.OTHER_APP), 100_000L, 7L) != null)
+        assertTrue(MenuStepPolicy.check(inspect, baseline.copy(
+            lastFrameElapsedMs = 97_000L), 100_000L, 7L) != null)
+    }
+
+    @Test fun localImageTemplateCorrelationRejectsBlankAndUnrelatedFrames() {
+        val pixels = IntArray(64) { i -> (i * 17) % 255 }
+        assertTrue(SafeGameMenuDetector.normalizedCorrelation(pixels, pixels) > 0.999)
+        assertTrue(SafeGameMenuDetector.normalizedCorrelation(
+            pixels, pixels.reversedArray()) < 0.94)
+        assertTrue(SafeGameMenuDetector.normalizedCorrelation(
+            IntArray(64) { 100 }, IntArray(64) { 100 }) < 0.0)
+    }
+
     @Test fun missingPermissionsAndFailedLeaseNeverBecomeCandidates() {
         assertFalse(GameDeviceInspection.denied("Shizuku 不可用").candidate)
         assertFalse(GameDeviceInspection.fromDeviceStatus(JSONObject(), 300_000).candidate)
