@@ -5,6 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.json.JSONArray
 import org.json.JSONObject
 
 class ManualVisionProposalTest {
@@ -50,6 +51,41 @@ class ManualVisionProposalTest {
         assertTrue(runCatching { parseManualVisionProposal("{\"scene\":\"X\"}") }.isFailure)
         assertTrue(runCatching { parseManualVisionProposal(" ") }.isFailure)
         assertTrue(runCatching { parseManualVisionProposal("x".repeat(12_001)) }.isFailure)
+    }
+
+    @Test fun refusesNonTextAndNullJsonFields() {
+        fun valid(): JSONObject = JSONObject()
+            .put("scene", "探索")
+            .put("observations", "可见道路")
+            .put("next_step", "继续观察")
+            .put("gamer_action", "")
+        val invalidValues = listOf(
+            "scene" to JSONObject.NULL,
+            "observations" to 42,
+            "next_step" to JSONArray().put("not a string"),
+            "gamer_action" to JSONObject.NULL,
+        )
+        for ((field, invalid) in invalidValues) {
+            assertTrue(field, runCatching {
+                parseManualVisionProposal(valid().put(field, invalid).toString())
+            }.isFailure)
+        }
+    }
+
+    @Test fun requiresGamerFieldAndRejectsTruncationInsteadOfChangingAction() {
+        val valid = JSONObject()
+            .put("scene", "探索")
+            .put("observations", "道路")
+            .put("next_step", "继续观察")
+            .put("gamer_action", "")
+        assertTrue(runCatching {
+            parseManualVisionProposal(JSONObject(valid.toString())
+                .apply { remove("gamer_action") }.toString())
+        }.isFailure)
+        assertTrue(runCatching {
+            parseManualVisionProposal(valid.put("gamer_action",
+                "<|action_start|>" + "W".repeat(1400) + "<|action_end|>").toString())
+        }.isFailure)
     }
 
     @Test fun gamerActionGenerationNeedsExplicitOptIn() {
