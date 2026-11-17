@@ -131,7 +131,7 @@ class StarRailCaptureService : Service() {
         val display = virtualDisplay ?: return
         val size = captureDimensions(width, height)
         val previous = reader
-        if (previous?.width == size.width && previous.height == size.height) return
+        if (previous != null && previous.width == size.width && previous.height == size.height) return
         runCatching {
             val replacement = newReader(size)
             display.resize(size.width, size.height, resources.displayMetrics.densityDpi)
