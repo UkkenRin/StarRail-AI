@@ -241,6 +241,7 @@ internal fun AiAdvisorScreen() {
                 contentScale = ContentScale.Fit)
             Button(onClick = { LocalCaptureFrames.clearPreview() }) { Text("清除本机预览") }
         }
+        GamerProtocolPreviewPanel()
         Text("只读分析；不会控制游戏。你的账号档案只加密保存在本机，只有点击“让 AI 分析”才会将本次分析所需文字发给所选 AI。")
         Text("账号档案（实验版）", style = MaterialTheme.typography.titleMedium)
         Text("可以导入 PC 三月七小助手导出的 characters.json；目前不支持直接扫描安卓游戏，也不能获取未装备的全部遗器。")
