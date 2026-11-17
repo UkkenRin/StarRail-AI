@@ -2,7 +2,7 @@
 import unittest
 
 from starrail_core.agent_handoff import AgentHandoff
-from starrail_core.gamer_runtime import GamerAgentRuntime, ObservedFrame
+from starrail_core.gamer_runtime import GamerAgentRuntime, ObservedFrame, OfficialGameScalingModelPort
 from starrail_core.gamer_step_cycle import FrameProof, GamerStepCoordinator, LocalBinding
 from starrail_core.live_vision import LiveVisionGate, VisionBudget
 from starrail_core.sparse_thinking import SparseThinkGate, ThinkEvent
@@ -124,6 +124,21 @@ class IntegratedLoopTests(unittest.TestCase):
         self.assertIsNone(self.memory.find_verified_action(
             goal_id="open-menu", game_version="game-updated",
             scene_id="map", fingerprint=SIGNATURE))
+
+    def test_official_gamescaling_readonly_model_adapter_is_wired(self):
+        class Preview:
+            calls = 0
+            def propose(self, image, *, consent_for_this_frame, now_ms):
+                self.calls += 1
+                assert consent_for_this_frame and now_ms == 1100
+                return type("Result", (), {"valid": True, "gamer_wire": WIRE})()
+        preview = Preview()
+        self.runtime.model = OfficialGameScalingModelPort(preview, clock_ms=lambda: 1100)
+        result = self.run_step()
+        self.assertEqual(result.stage, "verified")
+        self.assertEqual(preview.calls, 1)
+        self.assertEqual(self.port.dispatch_calls, 1)
+        self.assertEqual(self.memory.verified_actions, 1)
 
     def test_normal_frames_need_no_model_or_device_actions(self):
         for _ in range(1000):
