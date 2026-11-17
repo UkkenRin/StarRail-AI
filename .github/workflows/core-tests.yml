@@ -10,6 +10,7 @@ on:
       - 'tests/test_scene_knowledge.py'
       - 'tests/test_agent_handoff.py'
       - 'tests/test_gamer_protocol.py'
+      - 'tests/test_live_vision.py'
       - 'data/game_scenes.json'
       - 'scripts/build_scene_knowledge.py'
       - 'tests/test_live_vision.py'
