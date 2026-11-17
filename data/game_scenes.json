@@ -3,7 +3,7 @@
   "game": "崩坏：星穹铁道",
   "source": {
     "repo": "moesnow/March7thAssistant",
-    "ref": "v2026.11.17",
+    "ref": "v2026.11.19",
     "pc": "assets/config/screens.json",
     "touch": "assets/touch_720/screens.json"
   },

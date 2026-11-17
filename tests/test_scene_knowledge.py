@@ -23,7 +23,7 @@ class SceneKnowledgeTests(unittest.TestCase):
         self.assertEqual(sum(s.touch is not None for s in scenes), 20)
         self.assertEqual(sum(len(s.pc.destinations) for s in scenes if s.pc), 116)
         self.assertEqual(sum(len(s.touch.destinations) for s in scenes if s.touch), 33)
-        self.assertEqual(self.catalog.upstream_ref, "v2026.11.17")
+        self.assertEqual(self.catalog.upstream_ref, "v2026.11.19")
 
     def test_pc_only_challenges_and_android_only_resource_screens(self):
         self.assertIsNotNone(self.catalog.get("apocalyptic").pc)

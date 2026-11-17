@@ -2,9 +2,9 @@
 
 ## 已实现并通过 CI 验证（尚未真机测试）
 
-[实现 PR #6](https://github.com/UkkenRin/StarRail-AI/pull/6) 已合并；[Windows/Linux 单元测试](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970224) 与 [Android 编译、JUnit、APK 产物](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970062) 均成功。已直接检查 APK 内含 `assets/starrail_ai_scenes.json`，其中 68 个场景及 PC/安卓数量正确。
+[实现 PR #6](https://github.com/UkkenRin/StarRail-AI/pull/6) 已合并；历史 [Windows/Linux 单元测试](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970224) 与 [Android 编译、JUnit、APK 产物](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970062) 均成功，先前 APK 已检查含 68 个场景。**上游固定版本升至 `v2026.11.19` 后，仍需以本次升级 PR 的 CI 为准，不能把历史 CI 结果当作新上游版本已编译成功。**
 
-- 从固定上游 March7thAssistant `v2026.11.17` 提取两套界面导航：
+- 从固定上游 March7thAssistant `v2026.11.19` 提取两套界面导航：
   - **PC (`pc_1080`)：61 个场景、116 条直接导航关系**，来源 `assets/config/screens.json`。
   - **Android (`touch_720`)：20 个场景、33 条直接导航关系**，来源 `assets/touch_720/screens.json`。
   - 合并为 **68 个唯一 ID**，保留同一 ID 的平台别名（例如 `incoming_message`：PC「新消息通知」、Android「短信」）。
@@ -19,7 +19,7 @@
 ```json
 {
   "schema_version": 1,
-  "source": {"repo": "moesnow/March7thAssistant", "ref": "v2026.11.17"},
+  "source": {"repo": "moesnow/March7thAssistant", "ref": "v2026.11.19"},
   "scenes": [
     {
       "id": "main", "name": "主界面",

@@ -42,7 +42,7 @@ class TestOverlay(unittest.TestCase):
             packaged = root / "Android/app/src/main/assets/starrail_ai_scenes.json"
             self.assertTrue(packaged.is_file())
             self.assertIn('"schema_version": 1', packaged.read_text(encoding="utf-8"))
-            self.assertIn('"ref": "v2026.11.17"', packaged.read_text(encoding="utf-8"))
+            self.assertIn('"ref": "v2026.11.19"', packaged.read_text(encoding="utf-8"))
             self.assertIn("org.json:json:", gradle.read_text())
             self.assertIn("top.starrailai", gradle.read_text())
             self.assertIn("android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION", manifest.read_text())

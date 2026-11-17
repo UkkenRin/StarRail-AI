@@ -51,7 +51,7 @@
 
 ## P2.5：共享游戏场景知识
 
-- ✅ 已合并并通过 CI 的 [场景知识库](SCENE_KNOWLEDGE.md)：从固定 M7A `v2026.11.17` 提取 61 PC、20 安卓命名场景（68 唯一 ID），仅保留界面标签和导航图，不执行原版脚本。[Windows/Linux 测试](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970224) 和 [Android/JUnit/APK 构建](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970062) 均通过。Windows/Linux 使用 Python 公共接口；安卓顾问支持离线查找和手动选择。**尚未真机测试，也不是自动识别画面。**
+- ✅ 已合并并通过 CI 的 [场景知识库](SCENE_KNOWLEDGE.md)：从固定 M7A `v2026.11.19` 提取 61 PC、20 安卓命名场景（68 唯一 ID），仅保留界面标签和导航图，不执行原版脚本。[Windows/Linux 测试](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970224) 和 [Android/JUnit/APK 构建](https://github.com/UkkenRin/StarRail-AI/actions/runs/43980970062) 均通过。Windows/Linux 使用 Python 公共接口；安卓顾问支持离线查找和手动选择。**尚未真机测试，也不是自动识别画面。**
 - ☐ 利用 Live Vision / 本地模板匹配自动把实际屏幕映射为已知场景 ID，置信度不够时返回 unknown。
 - ☐ 将游戏敌人、技能、界面用途/按钮定义补成经过来源核对的场景知识，避免把静态导航图误当完整攻略。
 

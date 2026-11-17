@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 import re
 
-REF = "v2026.11.17"
+REF = "v2026.11.19"
 UPSTREAM_REPOSITORY = "moesnow/March7thAssistant"
 PC_PATH = "assets/config/screens.json"
 TOUCH_PATH = "assets/touch_720/screens.json"
@@ -79,7 +79,7 @@ def build_catalog(pc: object, touch: object, *, upstream_ref: str = REF) -> dict
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("upstream", type=Path, help="Local M7A v2026.11.17 checkout")
+    parser.add_argument("upstream", type=Path, help=f"Local M7A {REF} checkout")
     parser.add_argument("--output", type=Path, default=Path("data/game_scenes.json"))
     args = parser.parse_args()
     source = args.upstream.resolve()
