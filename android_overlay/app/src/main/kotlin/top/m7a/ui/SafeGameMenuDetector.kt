@@ -54,27 +54,33 @@ internal object SafeGameMenuDetector {
         runCatching {
             context.assets.open("project.zip").use { source ->
                 ZipInputStream(source.buffered()).use { zip ->
+                    var found: Bitmap? = null
                     while (true) {
                         val entry = zip.nextEntry ?: break
                         if (entry.name == name && !entry.isDirectory) {
-                            val bytes = ByteArrayOutputStream().use { out ->
-                                val buf = ByteArray(4096)
-                                while (true) {
-                                    val n = zip.read(buf)
-                                    if (n <= 0) break
-                                    if (out.size() + n > 256_000) return@use null
-                                    out.write(buf, 0, n)
-                                }
-                                out.toByteArray()
+                            val bytes = readBoundedEntry(zip)
+                            if (bytes != null) {
+                                found = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                             }
-                            return@use BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            break
                         }
                         zip.closeEntry()
                     }
-                    null
+                    found
                 }
             }
         }.getOrNull()
+
+    private fun readBoundedEntry(zip: ZipInputStream): ByteArray? {
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(4096)
+        while (true) {
+            val n = zip.read(buffer)
+            if (n <= 0) return output.toByteArray()
+            if (output.size() + n > 256_000) return null
+            output.write(buffer, 0, n)
+        }
+    }
 
     private fun findMatch(
         frame: Bitmap, source: Bitmap,
