@@ -44,13 +44,13 @@
 2. 应用本仓库 `android_overlay/` 下的实验性 AI UI 补丁。
 3. 按上游 Android 构建步骤编译 **debug APK**，以 Workflow Artifact 形式提供。
 
-当前 MVP：只读「AI 顾问」页面。支持 OpenAI/DeepSeek/通义/自定义 Chat Completions API Key；另增加 **ChatGPT OAuth 的安卓实验实现**（动态客户端注册、PKCE、loopback 回调、ID Token 验证、Keystore 凭据存储、模型列表、Responses API 流式请求）。OAuth 客户端代码曾在 [Actions #43893504654](https://github.com/yu-x-an/StarRail-AI/actions/runs/43893504654) **编译成功**；但未完成**真机登录与模型请求测试**，使用者仍可能遇到授权、系统浏览器回调或额度限制。当前 API Key 仍仅存页面内存。
+当前 MVP：只读「AI 顾问」页面。支持 OpenAI/DeepSeek/通义/自定义 Chat Completions API Key；另增加 **ChatGPT OAuth 的安卓实验实现**（动态客户端注册、PKCE、loopback 回调、ID Token 验证、Keystore 凭据存储、模型列表、Responses API 流式请求）。OAuth 客户端代码曾在 [Actions #43893504654](https://github.com/UkkenRin/StarRail-AI/actions/runs/43893504654) **编译成功**；但未完成**真机登录与模型请求测试**，使用者仍可能遇到授权、系统浏览器回调或额度限制。当前 API Key 仍仅存页面内存。
 
 **这里没有自动扫描账号、没有前台实体屏控制、也没有 AI 自主战斗。** 新增独立包名 `top.starrailai` 的构建与安装仍须单独验证。详见 [OAuth 状态及测试说明](docs/OAUTH.md)。
 
 ## 正在开发：真实账号档案导入
 
-[账号档案功能与使用边界](docs/ACCOUNT_PROFILE.md)：在 Android「AI 顾问」页面导入 PC 版 `characters.json` 或在平板上直接保存账号备注。支持本地 Keystore 加密保存、只发送摘要给所选 AI、读取失败标记、用户主动删除。**这是导入而不是 Android 游戏自动扫描**；这项功能已合并进主分支，Android/JUnit 与 Windows/Linux 账号契约测试均通过；**还未在 iQOO Pad5 Pro 上做真机测试**。[实现记录 PR #2](https://github.com/yu-x-an/StarRail-AI/pull/2)、[安卓构建](https://github.com/yu-x-an/StarRail-AI/actions/runs/43967027440)。
+[账号档案功能与使用边界](docs/ACCOUNT_PROFILE.md)：在 Android「AI 顾问」页面导入 PC 版 `characters.json` 或在平板上直接保存账号备注。支持本地 Keystore 加密保存、只发送摘要给所选 AI、读取失败标记、用户主动删除。**这是导入而不是 Android 游戏自动扫描**；这项功能已合并进主分支，Android/JUnit 与 Windows/Linux 账号契约测试均通过；**还未在 iQOO Pad5 Pro 上做真机测试**。[实现记录 PR #2](https://github.com/UkkenRin/StarRail-AI/pull/2)、[安卓构建](https://github.com/UkkenRin/StarRail-AI/actions/runs/43967027440)。
 
 ## 构建
 

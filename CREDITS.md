@@ -15,7 +15,7 @@ StarRail-AI 希望在尊重原项目劳动成果的前提下，继续探索以 A
 - **上游项目**：[moesnow/March7thAssistant](https://github.com/moesnow/March7thAssistant)
 - **上游许可证**：[GNU GPL v3](https://github.com/moesnow/March7thAssistant/blob/main/LICENSE)
 - **当前 Android 构建基线**：固定的 [`v2026.11.17`](https://github.com/moesnow/March7thAssistant/tree/v2026.11.17)
-- **我们自己的改动**：[yu-x-an/StarRail-AI](https://github.com/yu-x-an/StarRail-AI)；主要在 `android_overlay/`、`starrail_core/`、`scripts/`、`data/` 与 `docs/`
+- **我们自己的改动**：[UkkenRin/StarRail-AI](https://github.com/UkkenRin/StarRail-AI)；主要在 `android_overlay/`、`starrail_core/`、`scripts/`、`data/` 与 `docs/`
 
 **当前 Android APK 并非从零自主实现的应用。** 构建时 GitHub Actions 下载固定版三月七小助手源码，再应用 StarRail-AI 的修改后编译。因此，APK 继承了原项目的重要代码及功能，StarRail-AI 自身新增的功能只是其中的一部分。可从 [Android 构建工作流](.github/workflows/android-debug.yml) 和 [补丁脚本](scripts/apply_android_overlay.py) 追溯准确来源。
 
