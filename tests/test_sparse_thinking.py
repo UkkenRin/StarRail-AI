@@ -34,10 +34,33 @@ class SparseThinkingTests(unittest.TestCase):
             self.assertFalse(candidate.reason_candidate)
             self.assertEqual(candidate.route, ThinkRoute.KEEP_LOCAL)
 
-    def test_m7a_existing_skill_avoids_cloud_even_on_new_goal(self):
-        for event in (ThinkEvent.NEW_GOAL, ThinkEvent.ROUTINE):
-            route = self.gate.decide(signal(event, mapped_m7a_skill=True))
-            self.assertEqual(route.route, ThinkRoute.USE_M7A)
+    def test_m7a_is_optional_not_a_default_policy(self):
+        # Existence of a script says nothing about scene/task suitability.
+        known_only = self.gate.decide(signal(
+            ThinkEvent.NEW_GOAL, mapped_m7a_skill=True))
+        self.assertTrue(known_only.reason_candidate)
+
+        verified_skill = dict(
+            mapped_m7a_skill=True, m7a_skill_suitable_now=True,
+        )
+        selected = self.gate.decide(signal(ThinkEvent.NEW_GOAL, **verified_skill))
+        self.assertEqual(selected.route, ThinkRoute.USE_M7A)
+        self.assertEqual(selected.reason, "locally_verified_m7a_skill")
+        self.assertEqual(self.gate.decide(signal(
+            ThinkEvent.ROUTINE, **verified_skill)).route, ThinkRoute.USE_M7A)
+
+        for extra in (
+            {"prefer_native_agent": True},
+            {"m7a_recent_failure": True},
+            {"m7a_skill_suitable_now": False},
+        ):
+            with self.subTest(extra=extra):
+                flags = {**verified_skill, **extra}
+                choice = self.gate.decide(signal(ThinkEvent.NEW_GOAL, **flags))
+                self.assertTrue(choice.reason_candidate)
+
+        # Running means the skill still owns input, not that the agent selected
+        # M7A over native control when starting this task.
         running = self.gate.decide(
             signal(ThinkEvent.NEW_GOAL, m7a_running=True)
         )
@@ -46,6 +69,13 @@ class SparseThinkingTests(unittest.TestCase):
     def test_locally_verified_cached_plan_is_reused_without_new_model_call(self):
         x = self.gate.decide(signal(ThinkEvent.NEW_GOAL, verified_cached_plan=True))
         self.assertEqual(x.route, ThinkRoute.USE_VERIFIED_PLAN)
+        self.assertEqual(
+            self.gate.decide(signal(
+                ThinkEvent.NEW_GOAL, verified_cached_plan=True,
+                mapped_m7a_skill=True, m7a_skill_suitable_now=True,
+            )).route,
+            ThinkRoute.USE_VERIFIED_PLAN,
+        )
         # Unexpected UI invalidates easy reuse even when there is a cached plan.
         y = self.gate.decide(signal(ThinkEvent.UNEXPECTED, verified_cached_plan=True))
         self.assertTrue(y.reason_candidate)
