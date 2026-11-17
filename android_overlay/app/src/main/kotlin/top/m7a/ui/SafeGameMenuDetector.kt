@@ -91,8 +91,9 @@ internal object SafeGameMenuDetector {
         if (areaWidth < 10 || areaHeight < 10 || source.width < 6 || source.height < 6) return false
         // Smaller templates reduce CPU cost. Different scales fail closed
         // rather than treating mismatched game resolutions as trusted input.
-        val baseScale = min(areaWidth.toDouble() / source.width,
-                            areaHeight.toDouble() / source.height)
+        val baseScale = if (areaWidth > 100) frame.width / 1280.0
+            else min(areaWidth.toDouble() / source.width,
+                     areaHeight.toDouble() / source.height)
         for (factor in listOf(1.0, 0.82, 0.68)) {
             val tw = (source.width * baseScale * factor).toInt()
             val th = (source.height * baseScale * factor).toInt()
