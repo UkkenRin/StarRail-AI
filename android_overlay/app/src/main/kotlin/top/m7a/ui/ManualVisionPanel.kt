@@ -41,11 +41,15 @@ internal fun ManualVisionPanel(
     model: String,
     bitmap: Bitmap?,
     lastFrameElapsedMs: Long,
+    oauth: ChatGptOAuth,
+    oauthModel: String,
 ) {
     val scope = rememberCoroutineScope()
     var confirmSend by remember { mutableStateOf(false) }
     var selectedFrame by remember { mutableStateOf<Bitmap?>(null) }
     var selectedFrameElapsedMs by remember { mutableStateOf(0L) }
+    var selectedModel by remember { mutableStateOf("") }
+    var selectedProvider by remember { mutableStateOf(provider) }
     var allowGamerSuggestion by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("没有发送任何画面到云端") }
@@ -56,21 +60,25 @@ internal fun ManualVisionPanel(
             style = MaterialTheme.typography.titleMedium)
         Text("当前采集画面默认只存在本机内存。仅当你点击下方按钮并再次确认时，" +
             "才会将一张压缩后的截图发给选定的视觉 AI API。可能包含游戏账号、通知或其他应用内容。")
-        Text("仅支持可以接收图片的 API Key 模型；不使用 ChatGPT 账号 OAuth。" +
+        Text("支持已授权的 ChatGPT OAuth 视觉模型或带 API Key 的视觉模型。" +
             "每次应用进程最多 3 次请求，至少间隔 10 秒；图片和模型回答不写入文件。")
         Row {
             Checkbox(checked = allowGamerSuggestion, onCheckedChange = { allowGamerSuggestion = it })
             Text("可选：让 AI 同时给出 Gamer 格式动作提案（仅显示，不执行；不确定时为空）")
         }
-        if (provider == Provider.CHATGPT) {
-            Text("请先在下方切换为支持图片的 API Key 服务。ChatGPT 订阅不等同于 API 访问。")
+        if (provider == Provider.CHATGPT && (!oauth.hasPlanPermission() || oauthModel.isBlank())) {
+            Text("请先使用下方 ChatGPT OAuth 登录，并选择有图像输入能力的模型。")
         }
         Button(
             enabled = !busy && bitmap != null && lastFrameElapsedMs > 0L &&
-                provider != Provider.CHATGPT && apiKey.isNotBlank() && model.isNotBlank(),
+                (if (provider == Provider.CHATGPT)
+                    oauth.hasPlanPermission() && oauthModel.isNotBlank()
+                else apiKey.isNotBlank() && model.isNotBlank()),
             onClick = {
                 selectedFrame = bitmap
                 selectedFrameElapsedMs = lastFrameElapsedMs
+                selectedProvider = provider
+                selectedModel = if (provider == Provider.CHATGPT) oauthModel else model
                 confirmSend = true
             },
         ) { Text(if (busy) "正在请求视觉 AI……" else "选择当前最后一帧，准备分析") }
@@ -81,7 +89,7 @@ internal fun ManualVisionPanel(
                 title = { Text("确认上传所选的这一张截图？") },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("将下方固定截图发送至 ${provider.title} / ${model.ifBlank { "未选模型" }}。" +
+                        Text("将下方固定截图发送至 ${selectedProvider.title} / ${selectedModel.ifBlank { "未选模型" }}。" +
                             "可能包含个人信息，API 供应商可能存储或计费。不会连续发送或点击游戏。")
                         Text(if (allowGamerSuggestion)
                             "本次额外请求 Gamer 200ms 键鼠动作提案，仅显示，不执行。"
@@ -99,6 +107,8 @@ internal fun ManualVisionPanel(
                     TextButton(onClick = {
                         confirmSend = false
                         val frame = selectedFrame
+                        val chosenProvider = selectedProvider
+                        val chosenModel = selectedModel
                         val consentedToGamerSuggestion = allowGamerSuggestion
                         val age = SystemClock.elapsedRealtime() - selectedFrameElapsedMs
                         selectedFrame = null
@@ -121,9 +131,14 @@ internal fun ManualVisionPanel(
                                     scope.launch {
                                         val result = withContext(Dispatchers.IO) {
                                             runCatching {
-                                                queryManualVisionProposal(
-                                                    provider, customBase, apiKey, model, frame,
-                                                    allowGamerSuggestion = consentedToGamerSuggestion)
+                                                if (chosenProvider == Provider.CHATGPT) {
+                                                    oauth.analyzeFrame(
+                                                        chosenModel, frame, consentedToGamerSuggestion)
+                                                } else {
+                                                    queryManualVisionProposal(
+                                                        chosenProvider, customBase, apiKey, chosenModel, frame,
+                                                        allowGamerSuggestion = consentedToGamerSuggestion)
+                                                }
                                             }
                                         }
                                         result.onSuccess {

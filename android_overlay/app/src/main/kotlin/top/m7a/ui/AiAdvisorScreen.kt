@@ -367,6 +367,8 @@ internal fun AiAdvisorScreen() {
             model = model,
             bitmap = captureState.preview,
             lastFrameElapsedMs = captureState.lastFrameElapsedMs,
+            oauth = chatgpt,
+            oauthModel = oauthModel,
         )
         OutlinedTextField(value = account, onValueChange = { if (it.length <= 12000) account = it },
             label = { Text("手动补充账号信息 / 培养偏好（可不填）") },

@@ -1,5 +1,7 @@
 # Gamer / GameScaling 动作协议：StarRail-AI 适配实验
 
+> **集成分支更新：** 这份文档描述原始**严格解析器与只读预览**的能力。后续整合代码见 [Gamer/StarRail-AI 组件接线](GAMER_RUNTIME_INTEGRATION.md)：`gamescaling_official.py` 可选导入上游真实 Python Policy，`gamer_runtime.py` 在有**可信本地 Port + 独占权限 + 新帧证据**时调用模型与执行器，`verified_memory.py` 根据已验证转移复用策略；安卓已增加 **OAuth 单张手动截图视觉分析**。这些功能仍不等于在 APK 上实现自动操作。
+
 > 状态：**兼容协议的独立解析器 + Android 本机只读解析界面已提交源码**；以 CI 运行结果为准，尚未真机确认。**不是已接入 Gamer 模型，也不具备 AI 直接操作游戏能力。**
 
 ## 参考来源与代码边界
