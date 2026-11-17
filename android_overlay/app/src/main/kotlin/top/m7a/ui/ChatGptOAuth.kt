@@ -136,6 +136,7 @@ internal class ChatGptOAuth(context: Context) {
      */
     suspend fun analyzeFrame(
         model: String, bitmap: Bitmap, allowGamerSuggestion: Boolean,
+        userGoal: String = "",
     ): ManualVisionProposal = withContext(Dispatchers.IO) {
         require(model.isNotBlank() && model.length <= 150) { "请选择支持图片的 OAuth 模型" }
         require(bitmap.width in 1..640 && bitmap.height in 1..640) {
@@ -148,7 +149,7 @@ internal class ChatGptOAuth(context: Context) {
         require(jpeg.size in 1..512_000) { "单张截图超过 500 KB" }
         val uri = "data:image/jpeg;base64," + Base64.encodeToString(jpeg, Base64.NO_WRAP)
         val input = buildChatGptVisionInput(
-            manualVisionSystemPrompt(allowGamerSuggestion),
+            manualVisionSystemPrompt(allowGamerSuggestion, userGoal),
             uri,
         )
         val text = streamResponse(model, input)
