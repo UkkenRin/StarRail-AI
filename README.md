@@ -6,11 +6,11 @@
 
 ## 最新状态（2026-11-17）
 
-> **上游版本更新**：Android 构建基线在本次变更中由 March7thAssistant `v2026.11.17` 升级为 **`v2026.11.19`**。上游 `v2026.11.18` 改进 Android 游戏后台静音、异常退出恢复及触屏任务；`v2026.11.19` 修复触屏开拓力补充等问题。**上游更换不等于解决 StarRail-AI 自己的 MediaProjection 2 帧卡住/共享停止问题，也不代表 iQOO Pad5 Pro 已通过真机复测**。版本升级须以 Android CI 构建通过为准。
+> **上游版本更新**：Android 构建基线在本次变更中由 March7thAssistant `v2026.11.17` 升级为 **`v2026.11.19`**。上游 `v2026.11.18` 改进 Android 游戏后台静音、异常退出恢复及触屏任务；`v2026.11.19` 修复触屏开拓力补充等问题。**上游更换不等于解决 StarRail-AI 自己的 MediaProjection 成对帧更新现象/共享停止后的疑似重启问题，也不代表 iQOO Pad5 Pro 已通过真机复测**。版本升级须以 Android CI 构建通过为准。
 
 | 能力 | 主分支 / 实验分支实际状态 |
 | --- | --- |
-| Android 实体屏采集 | `main` 已有 MediaProjection 本地只读采样及屏幕预览；**iQOO Pad5 Pro 真机反馈：画面停在约 2 帧，停止共享后疑似 App 进程重启，验收未通过**。正在测试默认屏幕全屏授权、停止流程异常防护和本地状态诊断修复 |
+| Android 实体屏采集 | `main` 已有 MediaProjection 本地只读采样及屏幕预览；**iQOO Pad5 Pro 真机反馈：采集画面持续以两帧一组更新（不是停在第 2 帧），停止共享后疑似 App 进程重启；连续采集频率和退出生命周期仍待验收**。已集成默认屏幕全屏授权、停止流程异常防护和本地状态诊断，真机结果尚未确认 |
 | ChatGPT OAuth | `main` 已加入登录、模型列表、文字分析与**手动选一张截图的视觉分析**；真实账号和图像模型请求尚未真机验收 |
 | Gamer / GameScaling | [PR #21](https://github.com/UkkenRin/StarRail-AI/pull/21) **已合并**：200ms 动作协议、官方 GameScaling 可选 Python 只读接入、稀疏思考、受限单步验证接口和已验证经验缓存；**未接 Android 自动执行** |
 | Android Shizuku 实际触摸 | [PR #22](https://github.com/UkkenRin/StarRail-AI/pull/22) **待合并**：增加任务只读检查、经人工二次确认的一次「打开手机菜单」安全操作与新画面验证；未经过平板实测，且不是连续自主运行 |
@@ -20,7 +20,7 @@
 当前最需要确认的是：**APK 能否安装、OAuth 视觉是否真的能看见星铁、实体屏与 Shizuku 是否可用**。之后再将已确认的安全触控接到连续 AI 决策和短期历史，避免模型重复工作。详见 [Gamer 运行器整合说明](docs/GAMER_RUNTIME_INTEGRATION.md)、[Android 真实设备接口](https://github.com/UkkenRin/StarRail-AI/blob/feat/android-trusted-device-port-20261117/docs/ANDROID_TRUSTED_DEVICE_PORT.md)。
 
 
-> **当前设备问题（2026-11-17）**：iQOO Pad5 Pro / OriginOS 测试发现采集约 2 帧后停止更新、结束共享后疑似整个 App 重新启动。当前 main APK **不能被视为已通过屏幕采集验收**。本次修复尝试全屏 MediaProjection 授权、容错清理和无敏感数据的采集诊断；即使 CI 成功仍需重装后验证，不代表已经解决全部 OriginOS 保活问题。优先测试读取诊断文字，不应启用自动触控。
+> **当前设备问题（2026-11-17）**：iQOO Pad5 Pro / OriginOS 测试发现采集画面两帧一组地持续更新（并非只采两帧）、结束共享后疑似整个 App 重新启动。当前 main APK **不能被视为已通过连续采集与停止共享的完整验收**。本次修复尝试全屏 MediaProjection 授权、容错清理和无敏感数据的采集诊断；即使 CI 成功仍需重装后验证，不代表已经解决全部 OriginOS 保活问题。优先测试读取诊断文字，不应启用自动触控。
 
 ## Android APK 固定下载链接（自动更新文件）
 
