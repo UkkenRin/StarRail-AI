@@ -51,6 +51,15 @@ internal fun parseManualVisionProposal(text: String): ManualVisionProposal {
     )
 }
 
+/** Never display an action the user did not expressly request, even if a model ignores the prompt. */
+internal fun restrictGamerSuggestion(
+    result: ManualVisionProposal,
+    allowGamerSuggestion: Boolean,
+): ManualVisionProposal = if (allowGamerSuggestion) result else result.copy(
+    gamerAction = "",
+    gameActionParse = null,
+)
+
 /**
  * Generic VLMs can inspect images, but have not inherited Gamer's trained controls.
  * Action generation is OFF unless the user explicitly requests a read-only proposal.
@@ -150,7 +159,7 @@ internal fun queryManualVisionProposal(
         }
         val answer = JSONObject(response).getJSONArray("choices").getJSONObject(0)
             .getJSONObject("message").getString("content")
-        return parseManualVisionProposal(answer)
+        return restrictGamerSuggestion(parseManualVisionProposal(answer), allowGamerSuggestion)
     } finally {
         connection.disconnect()
     }
