@@ -463,6 +463,7 @@ internal fun AiAdvisorScreen() {
             }
         }) { Text(if (busy) "分析中……" else "让 AI 分析") }
         Text(status, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        GamerVisionProposalPanel(captureState, provider, customBase, apiKey, model)
         if (answer.isNotBlank()) {
             Text("AI 建议", style = MaterialTheme.typography.titleMedium)
             Text(answer)
