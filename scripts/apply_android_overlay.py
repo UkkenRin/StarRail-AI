@@ -47,6 +47,10 @@ def apply(upstream: Path):
         '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />\n'
         '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />')
     m = replace_once(m,
+        '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />',
+        '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />\n'
+        '    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />')
+    m = replace_once(m,
         '        <service\n            android:name=".TaskRunnerService"',
         '        <service\n            android:name=".ui.StarRailCaptureService"\n'
         '            android:exported="false"\n'
@@ -86,16 +90,20 @@ def apply(upstream: Path):
         if not required.is_file():
             raise FileNotFoundError(required)
     shutil.copyfile(catalog_source, advisor.with_name("SceneCatalog.kt"))
-    capture_sources = ("CaptureGeometry.kt", "LocalCaptureFrames.kt", "StarRailCaptureService.kt")
+    capture_sources = ("CaptureGeometry.kt", "LocalCaptureFrames.kt",
+                       "StarRailCaptureService.kt", "FrameObservation.kt",
+                       "AndroidForegroundProbe.kt")
     for name in capture_sources:
         item = OVERLAY / "app/src/main/kotlin/top/m7a/ui" / name
         if not item.is_file():
             raise FileNotFoundError(item)
         shutil.copyfile(item, advisor.with_name(name))
-    geometry_test = OVERLAY / "app/src/test/kotlin/top/m7a/ui/CaptureGeometryTest.kt"
-    if not geometry_test.is_file():
-        raise FileNotFoundError(geometry_test)
-    shutil.copyfile(geometry_test, test_output.with_name("CaptureGeometryTest.kt"))
+    capture_tests = ("CaptureGeometryTest.kt", "FrameObservationTest.kt")
+    for name in capture_tests:
+        item = OVERLAY / "app/src/test/kotlin/top/m7a/ui" / name
+        if not item.is_file():
+            raise FileNotFoundError(item)
+        shutil.copyfile(item, test_output.with_name(name))
     shutil.copyfile(catalog_test, test_output.with_name("SceneCatalogTest.kt"))
     asset_output = upstream / "Android/app/src/main/assets/starrail_ai_scenes.json"
     asset_output.parent.mkdir(parents=True, exist_ok=True)

@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
+import android.os.SystemClock
+import android.provider.Settings
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -192,8 +194,46 @@ internal fun AiAdvisorScreen() {
             }) { Text("立即停止画面观察") }
         }
         Text(captureState.status, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("游戏前台提示（可选）：Android「使用情况访问」权限仅供诊断，不是可执行触控的焦点验证。没有授权也能继续采集本机预览。")
+        Button(onClick = {
+            runCatching {
+                context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }.onFailure { error ->
+                LocalCaptureFrames.notice("打不开系统使用情况授权页：" + (error.message ?: "未知错误"))
+            }
+        }) { Text("打开系统使用情况访问设置") }
+        val foregroundLabel = when (captureState.foregroundHint) {
+            ForegroundHint.PERMISSION_REQUIRED -> "尚未授予使用情况访问权限"
+            ForegroundHint.SCREEN_LOCKED -> "屏幕已关闭或锁定"
+            ForegroundHint.GAME_CANDIDATE -> "最近活动应用疑似星铁（未经窗口核验）"
+            ForegroundHint.OTHER_APP -> "最近活动应用不是已识别的星铁包名"
+            ForegroundHint.UNKNOWN -> "系统暂无法确定当前活动应用"
+        }
+        val visibilityLabel = when (captureState.projectionVisible) {
+            true -> "系统报告共享内容可见"
+            false -> "系统报告共享内容已不可见"
+            null -> "系统尚未报告共享内容可见性"
+        }
+        Text("共享状态：" + visibilityLabel + "；前台提示：" + foregroundLabel)
         if (captureState.frames > 0) {
-            Text("本机采样：${captureState.frames} 帧 · ${captureState.width}×${captureState.height}；下方仅显示内存中的最后一帧")
+            val ageMs = (SystemClock.elapsedRealtime() - captureState.lastFrameElapsedMs).coerceAtLeast(0L)
+            val readiness = FrameReadinessRules.evaluate(
+                captureState.running, captureState.frames, captureState.lastFrameElapsedMs,
+                SystemClock.elapsedRealtime(), captureState.projectionVisible,
+                captureState.foregroundHint,
+            )
+            val readinessLabel = when (readiness) {
+                FrameReadiness.NOT_CAPTURING -> "采集已停止"
+                FrameReadiness.NO_FRAME -> "暂无新帧"
+                FrameReadiness.STALE -> "已过期"
+                FrameReadiness.CAPTURE_HIDDEN -> "共享区域不可见"
+                FrameReadiness.GAME_NOT_CONFIRMED -> "游戏目标未确认"
+                FrameReadiness.LOCAL_CANDIDATE -> "仅是本地候选画面，未核验游戏窗口"
+            }
+            Text("本机采样：${captureState.frames} 帧 · ${captureState.width}×${captureState.height}；" +
+                "最近一帧约 ${ageMs / 1000} 秒前 · 画面变化候选 ${captureState.changeEvents} 次")
+            Text("最新帧诊断：" + readinessLabel + "；此结果绝不授权云上传或自动点击。")
         }
         captureState.preview?.let { bitmap ->
             Image(bitmap = bitmap.asImageBitmap(), contentDescription = "本地采集画面预览",

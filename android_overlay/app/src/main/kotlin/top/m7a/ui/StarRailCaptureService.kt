@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
@@ -42,8 +43,12 @@ class StarRailCaptureService : Service() {
     private var projectionCallback: MediaProjection.Callback? = null
     private var virtualDisplay: VirtualDisplay? = null
     private var reader: ImageReader? = null
-    private var closing = false
+    @Volatile private var closing = false
     private var lastSampleMs = 0L
+    private var sessionId = 0L
+    private var capturedContentSize: CaptureDimensions? = null
+    private val foregroundProbe by lazy { AndroidForegroundProbe(applicationContext) }
+    private val changes = FrameChangeDetector()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -83,6 +88,9 @@ class StarRailCaptureService : Service() {
             val active = manager.getMediaProjection(Activity.RESULT_OK, grant)
                 ?: error("系统未返回屏幕共享会话")
             projection = active
+            sessionId = LocalCaptureFrames.starting()
+            changes.reset()
+            lastSampleMs = 0L
 
             val callback = object : MediaProjection.Callback() {
                 override fun onStop() {
@@ -91,13 +99,20 @@ class StarRailCaptureService : Service() {
                 }
 
                 override fun onCapturedContentResize(width: Int, height: Int) {
-                    resizeCapture(width, height)
+                    if (width > 0 && height > 0) {
+                        capturedContentSize = CaptureDimensions(width, height)
+                        resizeCapture(width, height)
+                    }
+                }
+
+                override fun onCapturedContentVisibilityChanged(isVisible: Boolean) {
+                    LocalCaptureFrames.updateVisibility(sessionId, isVisible)
                 }
             }
             projectionCallback = callback
             active.registerCallback(callback, mainHandler)
 
-            val initial = screenDimensions()
+            val initial = capturedContentSize ?: screenDimensions()
             val size = captureDimensions(initial.width, initial.height)
             val nextReader = newReader(size)
             reader = nextReader
@@ -108,7 +123,6 @@ class StarRailCaptureService : Service() {
                 nextReader.surface,
                 null, mainHandler,
             )
-            LocalCaptureFrames.starting()
         } catch (error: Exception) {
             endSession("屏幕观察启动失败：" + (error.message ?: error.javaClass.simpleName).take(160))
             stopSelf()
@@ -165,7 +179,19 @@ class StarRailCaptureService : Service() {
                     if (now - lastSampleMs < 1000L) return@setOnImageAvailableListener
                     lastSampleMs = now
                     val preview = downsample(image) ?: return@setOnImageAvailableListener
-                    LocalCaptureFrames.showFrame(preview, image.width, image.height)
+                    val samples = IntArray(64) { n ->
+                        val pixel = preview.getPixel(
+                            n % 8 * preview.width / 8,
+                            n / 8 * preview.height / 8,
+                        )
+                        (Color.red(pixel) * 299 + Color.green(pixel) * 587 +
+                            Color.blue(pixel) * 114) / 1000
+                    }
+                    val changed = changes.changed(samples, image.width, image.height)
+                    LocalCaptureFrames.showFrame(
+                        sessionId, preview, image.width, image.height, changed,
+                        foregroundProbe.sample(),
+                    )
                 } finally {
                     image.close()
                 }
@@ -236,7 +262,8 @@ class StarRailCaptureService : Service() {
         worker = null
         workerHandler = null
         stopForeground(STOP_FOREGROUND_REMOVE)
-        LocalCaptureFrames.stop(reason)
+        if (sessionId > 0L) LocalCaptureFrames.stop(sessionId, reason)
+        else LocalCaptureFrames.notice(reason)
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
