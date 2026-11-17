@@ -66,8 +66,10 @@ class GamerActionChunk:
     def to_wire(self) -> str:
         """Canonical, tagged, reasoning-free form for offline testing/history."""
         head = f"{self.mouse_x_per_mille} {self.mouse_y_per_mille} {self.scroll_notches}"
-        groups = " ; ".join(" ".join(group) for group in self.steps)
-        return f"{ACTION_START}{head} ; {groups}{ACTION_END}"
+        # Never emit surplus spaces for empty groups; canonical no-op is
+        # "0 0 0 ; ; ; ; ; ;" with exactly six separators.
+        groups = " ".join("; " + " ".join(group) if group else ";" for group in self.steps)
+        return f"{ACTION_START}{head} {groups}{ACTION_END}"
 
 
 @dataclass(frozen=True)
