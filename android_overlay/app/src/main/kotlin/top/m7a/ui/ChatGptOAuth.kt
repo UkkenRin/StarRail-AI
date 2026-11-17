@@ -121,7 +121,7 @@ internal class ChatGptOAuth(context: Context) {
             require(model.isNotBlank() && question.isNotBlank()) { "请选择模型并输入问题" }
             require(account.length + observation.length + question.length < 40000) { "输入太长" }
             val prompt = "你是星穹铁道账号顾问。只能根据已提供的账号和关卡信息建议配队；未知内容须标明未知。" +
-                "你没有操作游戏的权限，不得声称已经自动扫描账号。\\n账号：\\n$account\\n场景：\\n$observation\\n问题：\\n$question"
+                "你没有操作游戏的权限，不得声称已经自动扫描账号。\n账号：\n$account\n场景：\n$observation\n问题：\n$question"
             val input = JSONArray().put(JSONObject().put("role", "user").put("content", prompt))
             streamResponse(model, input)
         }
