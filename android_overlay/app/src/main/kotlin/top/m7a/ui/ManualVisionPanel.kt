@@ -71,8 +71,9 @@ internal fun ManualVisionPanel(
         }
         Button(
             enabled = !busy && bitmap != null && lastFrameElapsedMs > 0L &&
-                if (provider == Provider.CHATGPT) oauth.hasPlanPermission() && oauthModel.isNotBlank()
-                else apiKey.isNotBlank() && model.isNotBlank(),
+                (if (provider == Provider.CHATGPT)
+                    oauth.hasPlanPermission() && oauthModel.isNotBlank()
+                else apiKey.isNotBlank() && model.isNotBlank()),
             onClick = {
                 selectedFrame = bitmap
                 selectedFrameElapsedMs = lastFrameElapsedMs
