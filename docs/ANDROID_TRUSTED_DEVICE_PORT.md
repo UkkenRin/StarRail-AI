@@ -12,6 +12,14 @@
 6. 通过 M7A `DeviceService.tap(display_id=0)` 执行最多一次 50ms 轻触。设备服务开启显示器 0 的看门狗后，底层还要求游戏 UID 定向输入；如果 Android/OriginOS 不支持 UID 定向注入会**直接拒绝**，不退化到任意系统触控。
 7. 点击后观察同一录屏会话的新画面，并尝试用本地 `menu.png` 模板确认手机菜单。未确认即返回 `unverified`、不重复点击、**不记录成功经验**。通知栏或应用页面停止共享会中断进一步检查。
 
+## AI-first 语义动作桥（同一 PR 新增）
+
+- 在用户手动确认上传的星铁截图分析中加入**用户本次目标**；通用视觉模型 / ChatGPT OAuth 可以在受限 JSON 的 `safe_action` 字段提出 `open_game_menu`，其他所有动作只能留空。
+- `ManualVisionProposal.parse` 对 `safe_action` 使用强类型和白名单；模型返回 `tap(…)`、坐标、支付、装备分解等指令会被拒绝。
+- 安卓页面只在模型确实提出 `open_game_menu` 后展示**“单独授权 AI 建议的菜单操作”**按钮。再次由用户授权，然后**重取当前实体屏游戏数据**。即使模型提案来自一张历史截图，历史帧也不能决定触摸是否许可。
+- `openVerifiedMenuOnce()` 由本地屏幕图标匹配提取点击目标像素，随后核验 Shizuku 看门狗、显示器、游戏 UID 和结果截图。输出 `blocked`、`unverified` 或 `verified`，绝不会无限重试。
+- 这个最小的 AI→语义动作→本地执行→新画面验证实验仍需要用户人工启动和逐次确认；**不等于通用 AI 自动探索**。后续才把这个 Android 执行器作为 `GamerAgentRuntime.TrustedGamePort` 的一个后端。
+
 ## 还缺什么
 
 - **Android 真机验证**：窗口真实焦点与 UID 注入能力、OriginOS 保活、模板的实际画面匹配率、物理屏是否是 16:9、系统截图权限续期。任务可见仅是候选，仍不是“绝对焦点证明”；本次入口依靠目标 UID 定向及多重本地检查来限制风险。
