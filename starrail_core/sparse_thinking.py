@@ -52,6 +52,11 @@ class ThinkSignal:
     m7a_running: bool = False
     m7a_input_released: bool = False
     mapped_m7a_skill: bool = False
+    # A known script ID alone is NOT evidence that it suits the current scene.
+    # Trust these flags only when a local task/scene capability checker verifies them.
+    m7a_skill_suitable_now: bool = False
+    m7a_recent_failure: bool = False
+    prefer_native_agent: bool = False
     verified_cached_plan: bool = False
 
 
@@ -118,10 +123,18 @@ class SparseThinkGate:
         if signal.event is ThinkEvent.SCRIPT_FAILED and not signal.m7a_input_released:
             return ThinkDecision(ThinkRoute.PAUSE, "await_m7a_input_release")
         if signal.event in {ThinkEvent.ROUTINE, ThinkEvent.NEW_GOAL}:
-            if signal.mapped_m7a_skill:
-                return ThinkDecision(ThinkRoute.USE_M7A, "known_m7a_skill")
+            # Agent-first: reusable, locally VERIFIED plans are independent
+            # capabilities, not second-class fallbacks to M7A.
             if signal.verified_cached_plan:
                 return ThinkDecision(ThinkRoute.USE_VERIFIED_PLAN, "verified_local_plan")
+            # M7A is an OPTIONAL skill, selected only when the locally verified
+            # current situation matches its capabilities, it has not just failed,
+            # and the user hasn't selected native agent control. Merely knowing
+            # a script ID cannot dictate the agent's policy.
+            if (signal.mapped_m7a_skill and signal.m7a_skill_suitable_now
+                    and not signal.m7a_recent_failure
+                    and not signal.prefer_native_agent):
+                return ThinkDecision(ThinkRoute.USE_M7A, "locally_verified_m7a_skill")
         if signal.event is ThinkEvent.ROUTINE:
             return ThinkDecision(ThinkRoute.KEEP_LOCAL, "routine_no_new_evidence")
         if signal.event not in self._REASON_EVENTS:
