@@ -1,6 +1,7 @@
 package top.m7a.ui
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -10,6 +11,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigInteger
+import java.io.ByteArrayOutputStream
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.SocketTimeoutException
@@ -119,45 +121,85 @@ internal class ChatGptOAuth(context: Context) {
             require(model.isNotBlank() && question.isNotBlank()) { "请选择模型并输入问题" }
             require(account.length + observation.length + question.length < 40000) { "输入太长" }
             val prompt = "你是星穹铁道账号顾问。只能根据已提供的账号和关卡信息建议配队；未知内容须标明未知。" +
-                "你没有操作游戏的权限，不得声称已经自动扫描账号。\n账号：\n$account\n场景：\n$observation\n问题：\n$question"
-            val body = JSONObject().put("model", model)
-                .put("input", JSONArray().put(JSONObject().put("role", "user").put("content", prompt)))
-                .put("store", false).put("stream", true)
-            val conn = (URL("$API/responses").openConnection() as HttpsURLConnection).apply {
-                requestMethod = "POST"; doOutput = true
-                connectTimeout = 15000; readTimeout = 90000
-                setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("Accept", "text/event-stream")
-                setRequestProperty("Authorization", "Bearer ${accessToken()}")
-            }
-            try {
-                conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
-                require(conn.responseCode in 200..299) { "Responses API HTTP ${conn.responseCode}" }
-                val answer = StringBuilder()
-                var completed = false
-                conn.inputStream.bufferedReader(Charsets.UTF_8).useLines { lines ->
-                    for (line in lines) {
-                        if (!line.startsWith("data: ")) continue
-                        val data = line.substring(6)
-                        if (data == "[DONE]") break
-                        val event = try { JSONObject(data) } catch (_: Exception) { continue }
-                        when (event.optString("type")) {
-                            "response.output_text.delta" -> {
-                                answer.append(event.optString("delta"))
-                                require(answer.length < 100000) { "模型回复过长" }
-                            }
-                            "response.failed" -> error("模型请求失败：${event.optJSONObject("response")?.optJSONObject("error")?.optString("code")}")
-                            "response.incomplete" -> error("模型回复不完整")
-                            "response.completed" -> completed = true
+                "你没有操作游戏的权限，不得声称已经自动扫描账号。\\n账号：\\n$account\\n场景：\\n$observation\\n问题：\\n$question"
+            val input = JSONArray().put(JSONObject().put("role", "user").put("content", prompt))
+            streamResponse(model, input)
+        }
+
+    /**
+     * User-selected STILL frame from LocalCaptureFrames, not live agent control.
+     * OAuth plan usage supports image input on eligible vision-capable models;
+     * no token, screenshot or model result is persisted or logged.
+     *
+     * The caller MUST get explicit consent for this exact frame and enforce the
+     * shared ManualVisionQuotaSession. An image is NEVER evidence for tapping.
+     */
+    suspend fun analyzeFrame(
+        model: String, bitmap: Bitmap, allowGamerSuggestion: Boolean,
+    ): ManualVisionProposal = withContext(Dispatchers.IO) {
+        require(model.isNotBlank() && model.length <= 150) { "请选择支持图片的 OAuth 模型" }
+        require(bitmap.width in 1..640 && bitmap.height in 1..640) {
+            "只允许发送最长边 640 像素的本机预览"
+        }
+        val jpeg = ByteArrayOutputStream().use { output ->
+            require(bitmap.compress(Bitmap.CompressFormat.JPEG, 72, output)) { "图片编码失败" }
+            output.toByteArray()
+        }
+        require(jpeg.size in 1..512_000) { "单张截图超过 500 KB" }
+        val uri = "data:image/jpeg;base64," + Base64.encodeToString(jpeg, Base64.NO_WRAP)
+        val input = buildChatGptVisionInput(
+            manualVisionSystemPrompt(allowGamerSuggestion),
+            uri,
+        )
+        val text = streamResponse(model, input)
+        restrictGamerSuggestion(parseManualVisionProposal(text), allowGamerSuggestion)
+    }
+
+    /**
+     * One strict HTTPS Responses request. OAuth requires store=false + stream=true.
+     * Do not silently follow redirects carrying screenshot or bearer token.
+     */
+    private fun streamResponse(model: String, input: JSONArray): String {
+        val body = JSONObject().put("model", model).put("input", input)
+            .put("store", false).put("stream", true)
+        val conn = (URL("$API/responses").openConnection() as HttpsURLConnection).apply {
+            requestMethod = "POST"
+            instanceFollowRedirects = false
+            doOutput = true
+            connectTimeout = 15_000
+            readTimeout = 90_000
+            setRequestProperty("Content-Type", "application/json")
+            setRequestProperty("Accept", "text/event-stream")
+            setRequestProperty("Authorization", "Bearer ${accessToken()}")
+        }
+        try {
+            conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+            require(conn.responseCode in 200..299) { "Responses API HTTP ${conn.responseCode}" }
+            val answer = StringBuilder()
+            var completed = false
+            conn.inputStream.bufferedReader(Charsets.UTF_8).useLines { lines ->
+                for (line in lines) {
+                    if (!line.startsWith("data: ")) continue
+                    val data = line.substring(6)
+                    if (data == "[DONE]") break
+                    val event = try { JSONObject(data) } catch (_: Exception) { continue }
+                    when (event.optString("type")) {
+                        "response.output_text.delta" -> {
+                            answer.append(event.optString("delta"))
+                            require(answer.length < 100_000) { "模型回复过长" }
                         }
+                        "response.failed" -> error("模型请求失败")
+                        "response.incomplete" -> error("模型回复不完整")
+                        "response.completed" -> completed = true
                     }
                 }
-                require(completed) { "没有收到模型完成标记，可能中途断线" }
-                answer.toString().ifEmpty { error("模型返回空内容") }
-            } finally {
-                conn.disconnect()
             }
+            require(completed) { "没有收到模型完成标记，可能中途断线" }
+            return answer.toString().ifEmpty { error("模型返回空内容") }
+        } finally {
+            conn.disconnect()
         }
+    }
 
     suspend fun signOut(): String = withContext(Dispatchers.IO) {
         val profile = readCredentials()
