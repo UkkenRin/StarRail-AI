@@ -40,6 +40,10 @@
 
 基于固定版本上游 M7A 的 PC **61** 个场景、触屏 **20** 个场景，生成 **68** 个去重场景 ID 和平台独立导航关系。知识库在 [data/game_scenes.json](data/game_scenes.json)，Python 共用接口在 [starrail_core/scene_knowledge.py](starrail_core/scene_knowledge.py)。安卓「AI 顾问」可**离线搜索并手动选场景**；之后连接模型时，仅按需发送选中场景的可读摘要。**不是实时识别游戏画面，不会自动操作，不会上传源代码脚本。** 详情：[场景知识库](docs/SCENE_KNOWLEDGE.md)。
 
+## 视觉 AI 手动看图（只读试验）
+
+安卓端新增了 [手动视觉 AI 单帧分析](docs/MANUAL_VISION_AI.md) 的实验源码：用户先采集并确认本机最后一帧，再通过二次明确同意，把一张压缩截图发送给**支持图像的 HTTPS API Key 模型**，得到场景判断与下一步建议。默认不上传、单进程最多 3 次、最短冷却 10 秒；不支持通过 ChatGPT 订阅直接使用该 API，不会自动点击或连续上传。此功能需要 Android CI 和真机/供应商接口验收。并非 Gamer 专用模型或完整实时游戏智能体。
+
 ## 新方向：Live Vision（直接视觉理解，不强制 OCR）
 
 最新决策：**让 Android/Windows 在本地持续采集游戏画面流；只在必要的关键事件，把画面直接交给支持视觉的 AI 分析**，无需强制 OCR。持续本地采集不等于持续上传云视频；模型费用仍然受关键帧次数、分辨率和 Provider 规则影响。现有稳定的 OCR 任务保留，作为精确读取属性等可选方案。

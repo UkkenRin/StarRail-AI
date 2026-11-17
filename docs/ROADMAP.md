@@ -45,6 +45,7 @@
 - ☑ 已提交 [AI 主驾驶与脚本接管设计](AUTONOMOUS_GAME_AGENT.md)：AI 可直接接管游戏，也可调用 M7A 后在失败时暂停脚本、自己操作并验证；目标是几乎全游戏自主执行，M7A 仅为工具。**目标和当前交付能力严格区分**。
 - ☑ 新增 [Gamer/GameScaling 动作协议只读适配](GAMER_ADAPTER.md)：Python 共享核心严格解析 Gamer 的 200ms/6 组键鼠动作格式，Android「AI 顾问」新增本地解析预览，附 Python/Kotlin 测试。未接入模型权重、触控执行器或实时游戏操控，需 CI 和真机核验。
 - ☑ 已提交 `starrail_core/agent_handoff.py` 独占输入权协议原型：包含 AI-first / M7A 暂停确认 / 限时接管租约 / 动作许可 / 失败与复位，配套纯 Python 测试；**尚无真实画面观察、LLM 规划、平台执行器或 APK 集成**。
+- ☑ [安卓手动视觉 AI 单帧分析试验](MANUAL_VISION_AI.md)：在用户二次明确确认、API Key 模型支持图片、2 分钟内缓存截图、单进程最多 3 次且间隔至少 10 秒的条件下，发送单张缩放 JPEG 到 HTTPS 视觉 API，返回只读场景与下一步建议。**待 CI 与真机验收；没有实时游戏感知、执行器、自动动作或 Gamer 专用模型。**
 - ☐ Android/Windows FrameSource 和焦点检查，打通真实截图到视觉模型的场景理解。
 - ☐ 模型输出的动态目标和操作计划，与 M7A/Android 任务可用性匹配；未知场景也能直接自主操作，不仅仅启动固定任务。
 - ☐ 将输入权原型接到真正的 M7A 停止/释放信号、受限 Windows/Android GameExecutor 和操作后验证；异常支持 **脚本 → AI 接管 → 可选恢复脚本**。

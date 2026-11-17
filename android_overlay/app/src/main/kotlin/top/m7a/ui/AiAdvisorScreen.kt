@@ -176,7 +176,7 @@ internal fun AiAdvisorScreen() {
         Text("AI 账号顾问 · 实验版", style = MaterialTheme.typography.titleLarge)
         Text("真实屏幕画面 · 本地只读试验", style = MaterialTheme.typography.titleMedium)
         Text("点击后由 Android 系统请求共享权限。可以切到星铁，让本机采集画面；在系统通知中点「停止观察」后回到这里查看最后一帧。可能采到其他应用或敏感画面，请只在需要时授权。")
-        Text("这是你的真实屏幕采集，不是三月七小助手的后台游戏虚拟屏。画面仅保存在本机内存，不写入文件、不上传云端，也不允许 AI 操作。")
+        Text("这是你的真实屏幕采集，不是三月七小助手的后台游戏虚拟屏。画面默认仅在本机内存。只有你在下方手动确认时才可能上传选中的一张图片；AI 不得直接操控游戏。")
         Button(enabled = !captureState.running && !captureRequestPending, onClick = {
             runCatching {
                 captureRequestPending = true
@@ -242,7 +242,7 @@ internal fun AiAdvisorScreen() {
             Button(onClick = { LocalCaptureFrames.clearPreview() }) { Text("清除本机预览") }
         }
         GamerProtocolPreviewPanel()
-        Text("只读分析；不会控制游戏。你的账号档案只加密保存在本机，只有点击“让 AI 分析”才会将本次分析所需文字发给所选 AI。")
+        Text("只读分析；不会控制游戏。账号档案本机加密保存，仅点“让 AI 分析”会发送选中的账号文字；仅单独确认视觉分析时才发送一张截图。")
         Text("账号档案（实验版）", style = MaterialTheme.typography.titleMedium)
         Text("可以导入 PC 三月七小助手导出的 characters.json；目前不支持直接扫描安卓游戏，也不能获取未装备的全部遗器。")
         Button(enabled = !busy, onClick = {
@@ -360,6 +360,14 @@ internal fun AiAdvisorScreen() {
                 label = { Text("API Key（此版本不保存）") }, visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(), singleLine = true)
         }
+        ManualVisionPanel(
+            provider = provider,
+            customBase = customBase,
+            apiKey = apiKey,
+            model = model,
+            bitmap = captureState.preview,
+            lastFrameElapsedMs = captureState.lastFrameElapsedMs,
+        )
         OutlinedTextField(value = account, onValueChange = { if (it.length <= 12000) account = it },
             label = { Text("手动补充账号信息 / 培养偏好（可不填）") },
             minLines = 3, modifier = Modifier.fillMaxWidth())
