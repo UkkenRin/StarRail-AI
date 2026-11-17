@@ -46,6 +46,7 @@ class StarRailCaptureService : Service() {
     @Volatile private var closing = false
     private var lastSampleMs = 0L
     private var sessionId = 0L
+    @Volatile private var processedFrames = 0L
     private var capturedContentSize: CaptureDimensions? = null
     private val foregroundProbe by lazy { AndroidForegroundProbe(applicationContext) }
     private val changes = FrameChangeDetector()
@@ -89,12 +90,14 @@ class StarRailCaptureService : Service() {
                 ?: error("系统未返回屏幕共享会话")
             projection = active
             sessionId = LocalCaptureFrames.starting()
+            CaptureSessionHealth.started(applicationContext)
             changes.reset()
             lastSampleMs = 0L
+            processedFrames = 0L
 
             val callback = object : MediaProjection.Callback() {
                 override fun onStop() {
-                    endSession("系统已结束屏幕共享（可能因锁屏或撤销授权）")
+                    endSession("系统已结束屏幕共享（可能因锁屏或撤销授权）", projectionAlreadyStopped = true)
                     stopSelf()
                 }
 
@@ -171,8 +174,18 @@ class StarRailCaptureService : Service() {
     private fun newReader(size: CaptureDimensions): ImageReader =
         ImageReader.newInstance(size.width, size.height, PixelFormat.RGBA_8888, 2).also { output ->
             output.setOnImageAvailableListener({ source ->
-                val image = runCatching { source.acquireLatestImage() }.getOrNull()
-                    ?: return@setOnImageAvailableListener
+                val acquired = runCatching { source.acquireLatestImage() }
+                if (acquired.isFailure) {
+                    val kind = acquired.exceptionOrNull()?.javaClass?.simpleName ?: "Unknown"
+                    mainHandler.post {
+                        if (!closing) {
+                            endSession("系统图像读取异常（" + kind + "）")
+                            stopSelf()
+                        }
+                    }
+                    return@setOnImageAvailableListener
+                }
+                val image = acquired.getOrNull() ?: return@setOnImageAvailableListener
                 try {
                     if (closing) return@setOnImageAvailableListener
                     val now = SystemClock.elapsedRealtime()
@@ -192,8 +205,19 @@ class StarRailCaptureService : Service() {
                         sessionId, preview, image.width, image.height, changed,
                         foregroundProbe.sample(),
                     )
+                    processedFrames += 1L
+                    CaptureSessionHealth.frame(applicationContext, processedFrames)
+                } catch (failure: Exception) {
+                    // Unhandled ImageReader callbacks can kill the entire App
+                    // process; report a sanitized, terminal state instead.
+                    mainHandler.post {
+                        if (!closing) {
+                            endSession("读取屏幕帧失败（" + failure.javaClass.simpleName + "）")
+                            stopSelf()
+                        }
+                    }
                 } finally {
-                    image.close()
+                    runCatching { image.close() }
                 }
             }, workerHandler)
         }
@@ -246,24 +270,32 @@ class StarRailCaptureService : Service() {
             .build()
     }
 
-    private fun endSession(reason: String) {
+    /**
+     * The OS may already have invalidated MediaProjection before invoking
+     * Callback.onStop(). Cleanup must not throw into the main thread and
+     * accidentally crash the whole app. One stop, no token reuse.
+     */
+    private fun endSession(reason: String, projectionAlreadyStopped: Boolean = false) {
         if (closing) return
         closing = true
-        reader?.setOnImageAvailableListener(null, null)
-        virtualDisplay?.release()
-        virtualDisplay = null
-        reader?.close()
-        reader = null
-        projectionCallback?.let { callback -> projection?.unregisterCallback(callback) }
-        projectionCallback = null
-        projection?.stop()
-        projection = null
-        worker?.quitSafely()
-        worker = null
+        val closedReader = reader.also { reader = null }
+        runCatching { closedReader?.setOnImageAvailableListener(null, null) }
+        val closedDisplay = virtualDisplay.also { virtualDisplay = null }
+        runCatching { closedDisplay?.release() }
+        runCatching { closedReader?.close() }
+        val oldProjection = projection.also { projection = null }
+        val oldCallback = projectionCallback.also { projectionCallback = null }
+        runCatching { oldCallback?.let { oldProjection?.unregisterCallback(it) } }
+        if (!projectionAlreadyStopped) runCatching { oldProjection?.stop() }
+        val stoppedWorker = worker.also { worker = null }
+        runCatching { stoppedWorker?.quitSafely() }
         workerHandler = null
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
         if (sessionId > 0L) LocalCaptureFrames.stop(sessionId, reason)
         else LocalCaptureFrames.notice(reason)
+        runCatching {
+            CaptureSessionHealth.finished(applicationContext, reason, processedFrames)
+        }
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {

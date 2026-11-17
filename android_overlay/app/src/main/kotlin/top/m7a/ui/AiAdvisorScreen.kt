@@ -3,7 +3,9 @@ package top.m7a.ui
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.media.projection.MediaProjectionConfig
 import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
 import android.net.Uri
@@ -175,13 +177,20 @@ internal fun AiAdvisorScreen() {
     ) {
         Text("AI 账号顾问 · 实验版", style = MaterialTheme.typography.titleLarge)
         Text("真实屏幕画面 · 本地只读试验", style = MaterialTheme.typography.titleMedium)
-        Text("点击后由 Android 系统请求共享权限。可以切到星铁，让本机采集画面；在系统通知中点「停止观察」后回到这里查看最后一帧。可能采到其他应用或敏感画面，请只在需要时授权。")
+        Text("这里需要共享整个实体屏幕，以便切到星铁后继续观察。Android 将再次请求明确授权；不要在共享期间打开包含敏感信息的应用。系统停止共享后应只结束观察，不应重启 App。")
         Text("这是你的真实屏幕采集，不是三月七小助手的后台游戏虚拟屏。画面默认仅在本机内存。只有你在下方手动确认时才可能上传选中的一张图片；AI 不得直接操控游戏。")
         Button(enabled = !captureState.running && !captureRequestPending, onClick = {
             runCatching {
                 captureRequestPending = true
                 val manager = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-                capturePicker.launch(manager.createScreenCaptureIntent())
+                // Android 14+ otherwise defaults to a dialog that may capture
+                // only this app. Explicitly request the physical default
+                // display; system consent is still mandatory every session.
+                val permissionIntent = if (Build.VERSION.SDK_INT >= 34)
+                    manager.createScreenCaptureIntent(
+                        MediaProjectionConfig.createConfigForDefaultDisplay())
+                else manager.createScreenCaptureIntent()
+                capturePicker.launch(permissionIntent)
             }.onFailure { error ->
                 captureRequestPending = false
                 LocalCaptureFrames.notice("无法申请录屏授权：" + (error.message ?: "未知错误"))
@@ -194,6 +203,12 @@ internal fun AiAdvisorScreen() {
             }) { Text("立即停止画面观察") }
         }
         Text(captureState.status, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val captureSummary = remember(captureState.running, captureState.status, captureState.frames) {
+            CaptureSessionHealth.summary(context)
+        }
+        Text("本机采集诊断：" + captureSummary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("诊断仅记录上次采集状态与帧数，不保存截图、授权凭证或账号信息。")
         Text("游戏前台提示（可选）：Android「使用情况访问」权限仅供诊断，不是可执行触控的焦点验证。没有授权也能继续采集本机预览。")
         Button(onClick = {
             runCatching {

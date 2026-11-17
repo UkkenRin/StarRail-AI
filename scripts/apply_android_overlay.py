@@ -95,7 +95,7 @@ def apply(upstream: Path):
             raise FileNotFoundError(required)
     shutil.copyfile(catalog_source, advisor.with_name("SceneCatalog.kt"))
     capture_sources = ("CaptureGeometry.kt", "LocalCaptureFrames.kt",
-                       "StarRailCaptureService.kt", "FrameObservation.kt",
+                       "StarRailCaptureService.kt", "CaptureSessionHealth.kt", "FrameObservation.kt",
                        "AndroidForegroundProbe.kt", "GamerProtocol.kt",
                        "GamerProtocolPreviewPanel.kt", "ManualVisionQuota.kt",
                        "ManualVisionProposal.kt", "ManualVisionPanel.kt")
@@ -105,7 +105,7 @@ def apply(upstream: Path):
             raise FileNotFoundError(item)
         shutil.copyfile(item, advisor.with_name(name))
     capture_tests = ("CaptureGeometryTest.kt", "FrameObservationTest.kt",
-                     "GamerProtocolTest.kt", "ManualVisionProposalTest.kt")
+                     "GamerProtocolTest.kt", "ManualVisionProposalTest.kt", "CaptureSessionHealthTest.kt")
     for name in capture_tests:
         item = OVERLAY / "app/src/test/kotlin/top/m7a/ui" / name
         if not item.is_file():
