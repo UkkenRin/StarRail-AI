@@ -45,9 +45,9 @@ internal fun GamerVisionProposalPanel(
         mutableStateOf("只判断当前截图是否需要等待；不能确认键鼠映射时输出空动作")
     }
     var pending by remember { mutableStateOf<Bitmap?>(null) }
+    var pendingFrameTimeMs by remember { mutableStateOf(0L) }
     var busy by remember { mutableStateOf(false) }
-    var attempts by rememberSaveable { mutableStateOf(0) }
-    var lastAttemptElapsedMs by rememberSaveable { mutableStateOf(-1L) }
+    var attempts by remember { mutableStateOf(GamerVisionRequestQuota.attempts()) }
     var status by remember { mutableStateOf("尚未发送任何图片") }
     var proposal by remember { mutableStateOf<GamerActionChunk?>(null) }
 
@@ -72,9 +72,7 @@ internal fun GamerVisionProposalPanel(
             enabled = !busy && capture.preview != null,
             onClick = {
                 val now = SystemClock.elapsedRealtime()
-                val block = GamerVisionProtocol.blockReason(
-                    attempts, lastAttemptElapsedMs, now, capture.lastFrameElapsedMs,
-                )
+                val block = GamerVisionRequestQuota.peek(now, capture.lastFrameElapsedMs)
                 status = when {
                     block != null -> block
                     provider == Provider.CHATGPT -> "ChatGPT OAuth 视觉接口尚未验证，当前不允许截图上传"
@@ -82,6 +80,7 @@ internal fun GamerVisionProposalPanel(
                     objective.isBlank() -> "请填写观察目标"
                     else -> {
                         pending = capture.preview
+                        pendingFrameTimeMs = capture.lastFrameElapsedMs
                         "请确认是否只上传下面这一张截图"
                     }
                 }
@@ -121,14 +120,11 @@ internal fun GamerVisionProposalPanel(
                 TextButton(onClick = {
                     pending = null
                     val now = SystemClock.elapsedRealtime()
-                    val block = GamerVisionProtocol.blockReason(
-                        attempts, lastAttemptElapsedMs, now, capture.lastFrameElapsedMs,
-                    )
+                    val block = GamerVisionRequestQuota.consume(now, pendingFrameTimeMs)
                     if (block != null) {
                         status = block
                     } else {
-                        attempts += 1 // Consume before calling network; failure does not invite retries.
-                        lastAttemptElapsedMs = now
+                        attempts = GamerVisionRequestQuota.attempts() // Already consumed atomically before network.
                         busy = true
                         proposal = null
                         status = "已确认上传单帧；等待视觉模型提案（不会点击游戏）"
