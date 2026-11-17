@@ -174,8 +174,18 @@ class StarRailCaptureService : Service() {
     private fun newReader(size: CaptureDimensions): ImageReader =
         ImageReader.newInstance(size.width, size.height, PixelFormat.RGBA_8888, 2).also { output ->
             output.setOnImageAvailableListener({ source ->
-                val image = runCatching { source.acquireLatestImage() }.getOrNull()
-                    ?: return@setOnImageAvailableListener
+                val acquired = runCatching { source.acquireLatestImage() }
+                if (acquired.isFailure) {
+                    val kind = acquired.exceptionOrNull()?.javaClass?.simpleName ?: "Unknown"
+                    mainHandler.post {
+                        if (!closing) {
+                            endSession("系统图像读取异常（" + kind + "）")
+                            stopSelf()
+                        }
+                    }
+                    return@setOnImageAvailableListener
+                }
+                val image = acquired.getOrNull() ?: return@setOnImageAvailableListener
                 try {
                     if (closing) return@setOnImageAvailableListener
                     val now = SystemClock.elapsedRealtime()
