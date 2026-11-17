@@ -27,7 +27,8 @@ import java.net.Socket
  * the game before any future trusted GameExecutor is allowed to exist.
  */
 internal class TrustedGameDevice(private val context: Context) {
-    fun inspect(): GameDeviceInspection {
+    fun inspect(afterMs: Long = 0L): GameDeviceInspection {
+        require(afterMs in 0L..7000L) { "invalid inspection delay" }
         val app = context.applicationContext
         val tasks = TaskController.get(app)
         if (tasks.state.value.busy) return GameDeviceInspection.denied("M7A 任务正占用输入")
@@ -52,6 +53,8 @@ internal class TrustedGameDevice(private val context: Context) {
                         .put("relaunch", false)
                         .put("stall_ms", 0)
                         .put("subscribe", false))
+                    // User may switch to the game before sampling; never inject input.
+                    if (afterMs > 0) Thread.sleep(afterMs)
                     // Let the OS task-stack observer collect one fresh sample.
                     var status: JSONObject? = null
                     for (attempt in 0..3) {
