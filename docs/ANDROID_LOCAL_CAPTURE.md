@@ -35,7 +35,7 @@
 
 ## 实现与限制
 
-源码：Android overlay 中的 CaptureGeometry、LocalCaptureFrames、StarRailCaptureService，及 overlay 注入的 AndroidManifest 权限/服务声明。已有 Python patch 测试和 Android Kotlin 尺寸测试。构建仍使用固定版 March7thAssistant v2026.11.17；本功能不代表 APK 完全独立于上游，也不等于真机已验证。
+源码：Android overlay 中的 CaptureGeometry、LocalCaptureFrames、StarRailCaptureService，及 overlay 注入的 AndroidManifest 权限/服务声明。已有 Python patch 测试和 Android Kotlin 尺寸测试。构建仍使用固定版 March7thAssistant v2026.11.19；本功能不代表 APK 完全独立于上游，也不等于真机已验证。
 
 下一步是：带游戏前台焦点与时间戳的 FrameSource、只读视觉模型分析、动作许可/触控执行器、动作后验证，再接真正的 AI 自主接管流程。
 
